@@ -31,8 +31,8 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
-      - run: flutter build apk --debug
-      - run: flutter build apk --release --split-per-abi
+      - run: flutter build apk --debug --target-platform android-arm,android-arm64
+      - run: flutter build apk --release --target-platform android-arm,android-arm64
 
       - name: Publish pre-release
         env:
@@ -44,14 +44,12 @@ jobs:
           OUT=build/app/outputs/flutter-apk
           mkdir -p dist
           cp "$OUT/app-debug.apk" "dist/QuickPDF-${VERSION}-debug-${SHORT}.apk"
-          for abi in arm64-v8a armeabi-v7a x86_64; do
-            cp "$OUT/app-${abi}-release.apk" "dist/QuickPDF-${VERSION}-release-${abi}-${SHORT}.apk"
-          done
+          cp "$OUT/app-release.apk" "dist/QuickPDF-${VERSION}-release-${SHORT}.apk"
           {
             echo "Build #${GITHUB_RUN_NUMBER}, commit ${SHORT}."
             echo "Test AdMob IDs; release APKs are signed with the debug key (not for Play upload)."
             echo
-            echo "Most phones: install the arm64-v8a release APK."
+            echo "Release APK contains both arm64-v8a and armeabi-v7a (works on all ARM phones)."
             echo
             (cd dist && ls -l | awk 'NR>1{printf "- %s: %.1f MB\n", $9, $5/1048576}')
           } > notes.md
