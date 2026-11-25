@@ -1,4 +1,4 @@
-name: APK pre-release (debug + release)
+name: APK pre-release (release)
 
 on:
   workflow_dispatch:
@@ -31,7 +31,6 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
-      - run: flutter build apk --debug --target-platform android-arm,android-arm64
       - run: flutter build apk --release --target-platform android-arm,android-arm64
 
       - name: Publish pre-release
@@ -43,7 +42,6 @@ jobs:
           TAG="v${VERSION}-build.${GITHUB_RUN_NUMBER}"
           OUT=build/app/outputs/flutter-apk
           mkdir -p dist
-          cp "$OUT/app-debug.apk" "dist/QuickPDF-${VERSION}-debug-${SHORT}.apk"
           cp "$OUT/app-release.apk" "dist/QuickPDF-${VERSION}-release-${SHORT}.apk"
           {
             echo "Build #${GITHUB_RUN_NUMBER}, branch ${GITHUB_REF_NAME}, commit ${SHORT}."
