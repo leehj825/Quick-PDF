@@ -38,20 +38,22 @@ jobs:
           VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)
           SHORT=$(echo "$GITHUB_SHA" | cut -c1-7)
           TAG="v${VERSION}-debug.${GITHUB_RUN_NUMBER}"
-          APK="QuickPDF-${VERSION}-debug-${SHORT}.apk"
           OUT=build/app/outputs/flutter-apk
           mkdir -p dist
           cp "$OUT/app-debug.apk" "dist/QuickPDF-${VERSION}-debug-${SHORT}.apk"
           for abi in arm64-v8a armeabi-v7a x86_64; do
             cp "$OUT/app-${abi}-release.apk" "dist/QuickPDF-${VERSION}-release-${abi}-${SHORT}.apk"
           done
-          SIZES=$(cd dist && ls -l | awk 'NR>1{printf "- %s: %.1f MB\n", $9, $5/1048576}')
+          {
+            echo "Build #${GITHUB_RUN_NUMBER}, commit ${SHORT}."
+            echo "Test AdMob IDs; release APKs are signed with the debug key (not for Play upload)."
+            echo
+            echo "Most phones: install the arm64-v8a release APK."
+            echo
+            (cd dist && ls -l | awk 'NR>1{printf "- %s: %.1f MB\n", $9, $5/1048576}')
+          } > notes.md
           gh release create "$TAG" dist/*.apk \
             --target "$GITHUB_SHA" \
             --prerelease \
             --title "QuickPDF ${VERSION} (${SHORT})" \
-            --notes "Build #${GITHUB_RUN_NUMBER}, commit ${SHORT}. Test AdMob IDs; release APKs are signed with the debug key (not for Play upload).
-
-Most phones: install the arm64-v8a release APK.
-
-${SIZES}"
+            --notes-file notes.md
