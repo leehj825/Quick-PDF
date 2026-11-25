@@ -44,6 +44,8 @@ jobs:
             adb logcat -c
             adb shell monkey -p app.quickpdf.quick_pdf -c android.intent.category.LAUNCHER 1
             sleep 25
+            echo "=== resumed activity ==="
+            adb shell dumpsys activity activities | grep -E "topResumedActivity|mResumedActivity" | head -3
             echo "=== process alive? ==="
             adb shell pidof app.quickpdf.quick_pdf || echo "NOT RUNNING"
             adb logcat -d > logcat.txt
@@ -51,6 +53,8 @@ jobs:
             grep -E -n "FATAL EXCEPTION|Fatal signal|UnsatisfiedLinkError|ClassNotFoundException|NoClassDefFoundError|NoSuchMethodError|NoSuchFieldError|AbstractMethodError|Process: app.quickpdf|Force finishing|ANR in|Exception in thread|F/libc|F DEBUG" logcat.txt | head -60 || true
             echo "=== context around first fatal ==="
             grep -n -m1 -E "FATAL EXCEPTION|Fatal signal" logcat.txt | cut -d: -f1 | while read n; do sed -n "$((n-3)),$((n+40))p" logcat.txt; done
+            echo "=== app warnings/errors (W/E) ==="
+            adb logcat -d --pid=$(adb shell pidof app.quickpdf.quick_pdf) "*:W" | head -60
             echo "=== all Caused by lines near the app crash ==="
             grep -n "Caused by" logcat.txt | grep -v SliceDataConverter | head -20
             echo "=== flutter / app tagged lines ==="

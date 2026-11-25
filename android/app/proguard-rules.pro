@@ -12,3 +12,11 @@
 -keep class * extends androidx.room.RoomDatabase { *; }
 -keep class androidx.work.** { *; }
 -keep class androidx.startup.** { *; }
+
+# ML Kit discovers its components reflectively (ComponentDiscovery -> <init>()). Without these,
+# R8 strips the registrar constructors and text recognition fails at runtime.
+-keep class * implements com.google.firebase.components.ComponentRegistrar { <init>(); }
+-keep class com.google.mlkit.common.internal.** { *; }
+-keep class com.google.mlkit.vision.common.internal.** { *; }
+-keep class com.google.mlkit.vision.text.internal.** { *; }
+-keep class com.google.android.gms.internal.mlkit_** { *; }
