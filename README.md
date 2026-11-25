@@ -23,7 +23,7 @@ flutter build appbundle
 - **i18n:** 한국어 / 영어 / 일본어 / 스페인어, 다크 모드
 
 ## 출시 전 교체/설정할 것
-- `android/app/src/main/AndroidManifest.xml`의 AdMob **테스트 앱 ID**, `lib/services/ad_banner.dart`의 **테스트 광고 단위 ID**
+- `android/app/src/main/AndroidManifest.xml`의 AdMob **테스트 앱 ID**, `lib/services/ad_banner.dart`(배너)·`lib/services/reward_service.dart`(보상형)의 **테스트 광고 단위 ID**
 - `applicationId`(`app.quickpdf.quick_pdf`), 릴리스 서명 키
 
 ## 미구현 (TODO)
