@@ -1,4 +1,4 @@
-name: Debug APK pre-release
+name: APK pre-release (debug + release)
 
 on:
   workflow_dispatch:
@@ -29,6 +29,7 @@ jobs:
       - run: flutter analyze
       - run: flutter test
       - run: flutter build apk --debug
+      - run: flutter build apk --release --split-per-abi
 
       - name: Publish pre-release
         env:
@@ -38,9 +39,19 @@ jobs:
           SHORT=$(echo "$GITHUB_SHA" | cut -c1-7)
           TAG="v${VERSION}-debug.${GITHUB_RUN_NUMBER}"
           APK="QuickPDF-${VERSION}-debug-${SHORT}.apk"
-          cp build/app/outputs/flutter-apk/app-debug.apk "$APK"
-          gh release create "$TAG" "$APK" \
+          OUT=build/app/outputs/flutter-apk
+          mkdir -p dist
+          cp "$OUT/app-debug.apk" "dist/QuickPDF-${VERSION}-debug-${SHORT}.apk"
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            cp "$OUT/app-${abi}-release.apk" "dist/QuickPDF-${VERSION}-release-${abi}-${SHORT}.apk"
+          done
+          SIZES=$(cd dist && ls -l | awk 'NR>1{printf "- %s: %.1f MB\n", $9, $5/1048576}')
+          gh release create "$TAG" dist/*.apk \
             --target "$GITHUB_SHA" \
             --prerelease \
-            --title "QuickPDF ${VERSION} debug (${SHORT})" \
-            --notes "Debug APK (unsigned release key, test AdMob IDs). Build #${GITHUB_RUN_NUMBER}, commit ${SHORT}."
+            --title "QuickPDF ${VERSION} (${SHORT})" \
+            --notes "Build #${GITHUB_RUN_NUMBER}, commit ${SHORT}. Test AdMob IDs; release APKs are signed with the debug key (not for Play upload).
+
+Most phones: install the arm64-v8a release APK.
+
+${SIZES}"
