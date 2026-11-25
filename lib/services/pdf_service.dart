@@ -8,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../models.dart';
 import 'filters.dart';
+import 'pdf_import.dart';
 
 class _PageJob {
   _PageJob(this.path, this.turns, this.brightness, this.contrast, this.filter,
@@ -54,6 +55,30 @@ void _applyMatrix(img.Image im, List<double> m) {
   }
 }
 
+/// Latin-1 only: the built-in Helvetica font cannot encode other scripts.
+String _latin1(String t) => String.fromCharCodes(t.runes.where((c) => c >= 0x20 && c < 0x100));
+
+void _paintTextLayer(PdfGraphics canvas, pw.Document doc, List<OcrLine> lines, double k, int imgH) {
+  final font = PdfFont.helvetica(doc.document);
+  for (final l in lines) {
+    final text = _latin1(l.text).trim();
+    if (text.isEmpty || l.width <= 0 || l.height <= 0) continue;
+    final size = (l.height * k * 0.85).clamp(1.0, 200.0);
+    final natural = font.stringMetrics(text).width * size;
+    if (natural <= 0) continue;
+    final hScale = (l.width * k) / natural; // stretch glyph run to the detected line width
+    canvas.drawString(
+      font,
+      size,
+      text,
+      l.left * k,
+      (imgH - (l.top + l.height)) * k + l.height * k * 0.2, // approx. baseline
+      scale: hScale,
+      mode: PdfTextRenderingMode.invisible,
+    );
+  }
+}
+
 class PdfService {
   static const double _margin = 24;
 
@@ -63,14 +88,22 @@ class PdfService {
     required PdfOptions options,
     required String outPath,
     void Function(int done, int total)? onProgress,
+    Future<List<OcrLine>> Function(Uint8List jpeg)? recognize,
   }) async {
     final doc = pw.Document(compress: true);
     for (var i = 0; i < pages.length; i++) {
       onProgress?.call(i + 1, pages.length);
       final p = pages[i];
-      final job = _PageJob(p.path, p.quarterTurns, p.brightness, p.contrast,
+      // Imported PDF pages are rasterized (at the chosen quality) so they can be mixed with photos.
+      final src = p.isPdfPage ? await PdfImport.rasterize(p, options.quality.maxEdge) : p.path;
+      final job = _PageJob(src, p.quarterTurns, p.brightness, p.contrast,
           options.filter, options.quality.maxEdge, options.quality.jpegQuality);
-      final r = await Isolate.run(() => _processPage(job));
+      final _PageResult r;
+      try {
+        r = await Isolate.run(() => _processPage(job));
+      } finally {
+        if (p.isPdfPage) File(src).deleteSync();
+      }
       final image = pw.MemoryImage(r.jpeg);
       final m = options.margin ? _margin : 0.0;
 
@@ -82,10 +115,34 @@ class PdfService {
         final w = options.pageSize.width, h = options.pageSize.height;
         format = landscape ? PdfPageFormat(h, w) : PdfPageFormat(w, h);
       }
+      final lines = options.ocr && recognize != null ? await recognize(r.jpeg) : const <OcrLine>[];
+
+      // Image rect inside the page's printable area (contain).
+      final availW = format.width - m * 2, availH = format.height - m * 2;
+      final k = (availW / r.width) < (availH / r.height) ? availW / r.width : availH / r.height;
+      final w = r.width * k, h = r.height * k;
+      final left = m + (availW - w) / 2, top = m + (availH - h) / 2;
+
       doc.addPage(pw.Page(
         pageFormat: format,
-        margin: pw.EdgeInsets.all(m),
-        build: (_) => pw.Center(child: pw.Image(image, fit: pw.BoxFit.contain)),
+        margin: pw.EdgeInsets.zero,
+        build: (_) => pw.Stack(children: [
+          pw.Positioned(
+            left: left,
+            top: top,
+            child: pw.SizedBox(
+              width: w,
+              height: h,
+              child: pw.Stack(children: [
+                pw.Positioned.fill(child: pw.Image(image, fit: pw.BoxFit.fill)),
+                if (lines.isNotEmpty)
+                  pw.Positioned.fill(
+                    child: pw.CustomPaint(painter: (canvas, size) => _paintTextLayer(canvas, doc, lines, k, r.height)),
+                  ),
+              ]),
+            ),
+          ),
+        ]),
       ));
     }
     final bytes = await doc.save();

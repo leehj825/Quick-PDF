@@ -22,9 +22,17 @@ enum PageSizeMode {
 }
 
 class PageItem {
-  PageItem({required this.id, required this.path});
-  final int id;
+  PageItem({required this.id, required this.path, this.pdfPath, this.pdfPageIndex = 0});
+
+  /// An imported PDF page: [path] is only a thumbnail; the source is [pdfPath] page [pdfPageIndex].
+  factory PageItem.pdfPage({required int id, required String thumbPath, required String pdfPath, required int index}) =>
+      PageItem(id: id, path: thumbPath, pdfPath: pdfPath, pdfPageIndex: index);
+
+  int id;
   String path;
+  final String? pdfPath;
+  final int pdfPageIndex;
+  bool get isPdfPage => pdfPath != null;
   int quarterTurns = 0; // 90° steps clockwise
   int brightness = 0; // -50..50
   int contrast = 0; // -50..50
@@ -44,11 +52,22 @@ class PdfOptions {
     this.filter = DocFilter.original,
     this.pageSize = PageSizeMode.letter, // default: Letter
     this.margin = false,
+    this.ocr = false,
   });
   final Quality quality;
   final DocFilter filter;
   final PageSizeMode pageSize;
   final bool margin;
+
+  /// Add an invisible text layer (searchable PDF). Pro, English only.
+  final bool ocr;
+}
+
+/// One recognized line of text, in pixel coordinates of the page image.
+class OcrLine {
+  const OcrLine(this.text, this.left, this.top, this.width, this.height);
+  final String text;
+  final double left, top, width, height;
 }
 
 class HistoryEntry {

@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:pdfrx/pdfrx.dart';
 
 import 'screens/home_screen.dart';
 import 'services/pro_service.dart';
@@ -8,6 +9,7 @@ const kPrimary = Color(0xFF2563EB);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await pdfrxFlutterInitialize();
   await ProService.instance.init();
   try {
     await MobileAds.instance.initialize();

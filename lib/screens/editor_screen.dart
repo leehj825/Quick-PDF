@@ -10,14 +10,17 @@ import '../l10n.dart';
 import '../models.dart';
 import '../services/filters.dart';
 import '../services/history_service.dart';
+import '../services/ocr_service.dart';
 import '../services/pdf_service.dart';
 import '../services/pro_service.dart';
+import '../services/pdf_import.dart';
 import 'page_editor_screen.dart';
+import 'pro_sheet.dart';
 import 'result_screen.dart';
 
 class EditorScreen extends StatefulWidget {
-  const EditorScreen({super.key, required this.initialPaths});
-  final List<String> initialPaths;
+  const EditorScreen({super.key, required this.initialItems});
+  final List<PageItem> initialItems;
   @override
   State<EditorScreen> createState() => _EditorScreenState();
 }
@@ -30,6 +33,7 @@ class _EditorScreenState extends State<EditorScreen> {
   DocFilter _filter = DocFilter.original;
   PageSizeMode _size = PageSizeMode.letter; // default: Letter
   bool _margin = false;
+  bool _ocr = false; // Pro: searchable PDF (English)
   ({int done, int total})? _progress;
 
   int get _limit => ProService.instance.isPro.value ? 1 << 30 : ProService.freePageLimit;
@@ -37,7 +41,7 @@ class _EditorScreenState extends State<EditorScreen> {
   @override
   void initState() {
     super.initState();
-    _addPaths(widget.initialPaths, notify: false);
+    _addItems(widget.initialItems, notify: false);
   }
 
   @override
@@ -46,9 +50,15 @@ class _EditorScreenState extends State<EditorScreen> {
     super.dispose();
   }
 
-  void _addPaths(List<String> paths, {bool notify = true}) {
+  /// True when every page is an imported PDF page: they are merged as-is (lossless).
+  bool get _lossless => _pages.isNotEmpty && _pages.every((p) => p.isPdfPage);
+
+  void _addPaths(List<String> paths, {bool notify = true}) =>
+      _addItems([for (final p in paths) PageItem(id: 0, path: p)], notify: notify);
+
+  void _addItems(List<PageItem> items, {bool notify = true}) {
     final room = _limit - _pages.length;
-    if (paths.length > room) {
+    if (items.length > room) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -56,8 +66,10 @@ class _EditorScreenState extends State<EditorScreen> {
         }
       });
     }
-    final take = paths.take(room < 0 ? 0 : room);
-    final add = [for (final p in take) PageItem(id: _nextId++, path: p)];
+    final add = items.take(room < 0 ? 0 : room).toList();
+    for (final it in add) {
+      it.id = _nextId++;
+    }
     if (notify) {
       setState(() => _pages.addAll(add));
     } else {
@@ -67,6 +79,7 @@ class _EditorScreenState extends State<EditorScreen> {
 
   Future<void> _addMore() async {
     final s = S.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     final choice = await showModalBottomSheet<String>(
       context: context,
       builder: (c) => SafeArea(
@@ -79,12 +92,28 @@ class _EditorScreenState extends State<EditorScreen> {
               leading: const Icon(Icons.document_scanner_outlined),
               title: Text(s('scan')),
               onTap: () => Navigator.pop(c, 'scan')),
+          ListTile(
+              leading: const Icon(Icons.picture_as_pdf_outlined),
+              title: Text(s('importPdf')),
+              onTap: () => Navigator.pop(c, 'pdf')),
         ]),
       ),
     );
     if (choice == 'gallery') {
       final f = await ImagePicker().pickMultiImage();
       _addPaths(f.map((e) => e.path).toList());
+    } else if (choice == 'pdf') {
+      try {
+        final paths = await PdfImport.pickPdfPaths();
+        if (paths.isEmpty) return;
+        final room = _limit - _pages.length;
+        final items = await PdfImport.importPages(paths, maxPages: room < 0 ? 0 : room, nextId: () => 0);
+        _addItems(items);
+      } on EncryptedPdfException {
+        messenger.showSnackBar(SnackBar(content: Text(s('pdfEncrypted'))));
+      } catch (_) {
+        messenger.showSnackBar(SnackBar(content: Text(s('pdfFailed'))));
+      }
     } else if (choice == 'scan') {
       final scanner = DocumentScanner(
           options: DocumentScannerOptions(documentFormats: {DocumentFormat.jpeg}, isGalleryImport: false));
@@ -101,26 +130,42 @@ class _EditorScreenState extends State<EditorScreen> {
     final s = S.of(context);
     final nav = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final useOcr = _ocr && ProService.instance.isPro.value;
+    final ocr = useOcr ? OcrService() : null;
     try {
       setState(() => _progress = (done: 0, total: _pages.length));
       final dir = await HistoryService.pdfDir();
       final name = HistoryService.sanitize(_name.text);
       final id = DateTime.now().millisecondsSinceEpoch.toString();
       final path = '${dir.path}/$id.pdf';
-      final size = await PdfService.build(
-        pages: _pages,
-        options: PdfOptions(quality: _quality, filter: _filter, pageSize: _size, margin: _margin),
-        outPath: path,
-        onProgress: (d, t) => mounted ? setState(() => _progress = (done: d, total: t)) : null,
-      );
+      final int size;
+      if (_lossless) {
+        // PDF + PDF only: copy pages as-is.
+        final bytes = await PdfImport.mergeLossless(_pages);
+        await File(path).writeAsBytes(bytes, flush: true);
+        size = bytes.length;
+      } else {
+        size = await PdfService.build(
+          pages: _pages,
+          options: PdfOptions(quality: _quality, filter: _filter, pageSize: _size, margin: _margin, ocr: useOcr),
+          outPath: path,
+          recognize: ocr?.recognize,
+          onProgress: (d, t) => mounted ? setState(() => _progress = (done: d, total: t)) : null,
+        );
+      }
       final entry = HistoryEntry(
           id: id, name: '$name.pdf', path: path, pages: _pages.length, size: size, createdAt: DateTime.now());
       await HistoryService.add(entry);
       final count = await HistoryService.bumpSuccessCount();
       nav.pushReplacement(MaterialPageRoute(builder: (_) => ResultScreen(entry: entry, askReview: count == 3)));
+    } on EncryptedPdfException {
+      messenger.showSnackBar(SnackBar(content: Text(s('pdfEncrypted'))));
+      if (mounted) setState(() => _progress = null);
     } catch (_) {
       messenger.showSnackBar(SnackBar(content: Text(s('error'))));
       if (mounted) setState(() => _progress = null);
+    } finally {
+      await ocr?.close();
     }
   }
 
@@ -176,7 +221,7 @@ class _EditorScreenState extends State<EditorScreen> {
   Widget _thumb(PageItem p, int i) {
     return GestureDetector(
       key: ValueKey(p.id),
-      onTap: _progress != null
+      onTap: _progress != null || _lossless
           ? null
           : () async {
               await Navigator.of(context)
@@ -189,7 +234,7 @@ class _EditorScreenState extends State<EditorScreen> {
           ColoredBox(
             color: Colors.black12,
             child: ColorFiltered(
-              colorFilter: buildColorFilter(_filter, p.brightness, p.contrast),
+              colorFilter: _lossless ? const ColorFilter.mode(Colors.transparent, BlendMode.dst) : buildColorFilter(_filter, p.brightness, p.contrast),
               child: RotatedBox(
                 quarterTurns: p.quarterTurns,
                 child: Image.file(File(p.path), fit: BoxFit.cover, cacheWidth: 360),
@@ -205,6 +250,19 @@ class _EditorScreenState extends State<EditorScreen> {
               child: Text('${i + 1}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
             ),
           ),
+          if (_lossless)
+            Positioned(
+              left: 0,
+              bottom: 0,
+              child: InkResponse(
+                radius: 24,
+                onTap: _progress != null ? null : () => setState(() => p.quarterTurns = (p.quarterTurns + 1) % 4),
+                child: const Padding(
+                  padding: EdgeInsets.all(8),
+                  child: CircleAvatar(radius: 14, backgroundColor: Colors.black54, child: Icon(Icons.rotate_right, size: 18, color: Colors.white)),
+                ),
+              ),
+            ),
           Positioned(
             right: 0,
             top: 0,
@@ -227,6 +285,17 @@ class _EditorScreenState extends State<EditorScreen> {
     );
   }
 
+  Widget _nameField(S s, bool busy) => TextField(
+        controller: _name,
+        enabled: !busy,
+        decoration: InputDecoration(
+          labelText: s('filename'),
+          suffixText: '.pdf',
+          isDense: true,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+
   Widget _panel(S s, bool busy) {
     final est = PdfService.estimateSize(_pages, _quality);
     Widget label(String t, [String? trailing]) => Padding(
@@ -246,6 +315,22 @@ class _EditorScreenState extends State<EditorScreen> {
             onSelectionChanged: busy ? null : (v) => setState(() => on(v.first)),
           ),
         );
+    if (_lossless) {
+      return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Row(children: [
+            const Icon(Icons.info_outline, size: 18),
+            const SizedBox(width: 8),
+            Expanded(child: Text(s('pdfMergeNote'), style: const TextStyle(fontSize: 13))),
+          ]),
+        ),
+        _nameField(s, busy),
+        const SizedBox(height: 12),
+        FilledButton(onPressed: busy || _pages.isEmpty ? null : _make, child: Text(busy ? s('progress', {'a': _progress!.done, 'b': _progress!.total}) : s('make'))),
+        if (busy) const Padding(padding: EdgeInsets.only(top: 8), child: LinearProgressIndicator()),
+      ]);
+    }
     return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
       label(s('filter')),
       seg(_filter, {DocFilter.original: s('fOriginal'), DocFilter.vivid: s('fVivid'), DocFilter.mono: s('fMono')}, (v) => _filter = v),
@@ -274,7 +359,29 @@ class _EditorScreenState extends State<EditorScreen> {
           onSelected: busy ? null : (v) => setState(() => _margin = v),
         ),
       ]),
-      const SizedBox(height: 12),
+      ValueListenableBuilder<bool>(
+        valueListenable: ProService.instance.isPro,
+        builder: (ctx, pro, _) => SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          title: Row(children: [
+            Flexible(child: Text(s('ocr'), style: const TextStyle(fontWeight: FontWeight.w600))),
+            if (!pro) const Padding(padding: EdgeInsets.only(left: 6), child: Icon(Icons.lock_outline, size: 16, color: Colors.amber)),
+          ]),
+          subtitle: Text(pro ? s('ocrSub') : s('proOnly'), style: const TextStyle(fontSize: 12)),
+          value: pro && _ocr,
+          onChanged: busy
+              ? null
+              : (v) {
+                  if (!pro) {
+                    showProSheet(ctx);
+                  } else {
+                    setState(() => _ocr = v);
+                  }
+                },
+        ),
+      ),
+      const SizedBox(height: 4),
       FilledButton(
         onPressed: busy || _pages.isEmpty ? null : _make,
         child: Text(busy ? s('progress', {'a': _progress!.done, 'b': _progress!.total}) : s('make')),

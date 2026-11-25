@@ -1,0 +1,60 @@
+name: APK pre-release (debug + release)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/new-session-9s5yp5]
+    paths-ignore: ['**.md']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install poppler (pdftotext for OCR layer test)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
+
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build apk --debug --target-platform android-arm,android-arm64
+      - run: flutter build apk --release --target-platform android-arm,android-arm64
+
+      - name: Publish pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)
+          SHORT=$(echo "$GITHUB_SHA" | cut -c1-7)
+          TAG="v${VERSION}-build.${GITHUB_RUN_NUMBER}"
+          OUT=build/app/outputs/flutter-apk
+          mkdir -p dist
+          cp "$OUT/app-debug.apk" "dist/QuickPDF-${VERSION}-debug-${SHORT}.apk"
+          cp "$OUT/app-release.apk" "dist/QuickPDF-${VERSION}-release-${SHORT}.apk"
+          {
+            echo "Build #${GITHUB_RUN_NUMBER}, commit ${SHORT}."
+            echo "Test AdMob IDs; release APKs are signed with the debug key (not for Play upload)."
+            echo
+            echo "Release APK contains both arm64-v8a and armeabi-v7a (works on all ARM phones)."
+            echo
+            (cd dist && ls -l | awk 'NR>1{printf "- %s: %.1f MB\n", $9, $5/1048576}')
+          } > notes.md
+          gh release create "$TAG" dist/*.apk \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "QuickPDF ${VERSION} (${SHORT})" \
+            --notes-file notes.md

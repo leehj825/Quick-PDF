@@ -64,4 +64,54 @@ void main() {
     expect(m[0], greaterThan(0.4));
     expect(buildColorMatrix(DocFilter.original, 0, 0), [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0]);
   });
+
+  test('OCR adds an invisible, correctly positioned text layer (searchable PDF)', () async {
+    final out = '${tmp.path}/ocr.pdf';
+    // Standard quality downsizes 1200x1800 -> 1067x1600 (OCR coords are in that space).
+    // Letter 612x792 contain => k = 792/1600, image ~528x792 centered.
+    final p0 = PageItem(id: 99, path: pages[0].path); // unrotated
+    await PdfService.build(
+      pages: [p0],
+      options: const PdfOptions(ocr: true),
+      outPath: out,
+      recognize: (_) async => [
+        const OcrLine('Hello World', 120, 300, 600, 90), // px in the 1067x1600 processed image
+        const OcrLine('한글 only café', 120, 900, 700, 80), // non-Latin-1 chars must not break
+      ],
+    );
+    ProcessResult r;
+    try {
+      r = await Process.run('pdftotext', ['-bbox', out, '-']);
+    } on ProcessException {
+      markTestSkipped('pdftotext (poppler) not installed');
+      return;
+    }
+    expect(r.exitCode, 0);
+    final text = r.stdout as String;
+    expect(text, contains('>Hello<'));
+    expect(text, contains('>World<'));
+    expect(text, contains('>café<'));
+    final m = RegExp(r'xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)" yMax="([\d.]+)">Hello<').firstMatch(text)!;
+    final k = 792 / 1600, offX = (612 - 1067 * k) / 2;
+    expect(double.parse(m[1]!), closeTo(offX + 120 * k, 2)); // left edge
+    final w = RegExp(r'xMax="([\d.]+)" yMax="[\d.]+">World<').firstMatch(text)!;
+    expect(double.parse(w[1]!) - double.parse(m[1]!), closeTo(600 * k, 3)); // line stretched to detected width
+    expect(double.parse(m[2]!), closeTo(300 * k, 12)); // top edge (from page top, incl. ascender)
+    // Image is still drawn and nothing visible was added: the page has an image, text is invisible.
+    expect(RegExp(r'/Subtype\s*/Image').hasMatch(String.fromCharCodes(File(out).readAsBytesSync())), isTrue);
+  });
+
+  test('OCR off ignores recognizer', () async {
+    var called = false;
+    await PdfService.build(
+      pages: [PageItem(id: 98, path: pages[0].path)],
+      options: const PdfOptions(),
+      outPath: '${tmp.path}/noocr.pdf',
+      recognize: (_) async {
+        called = true;
+        return [];
+      },
+    );
+    expect(called, isFalse);
+  });
 }

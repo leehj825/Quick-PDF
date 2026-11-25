@@ -9,6 +9,7 @@ import '../models.dart';
 import '../services/ad_banner.dart';
 import '../services/history_service.dart';
 import '../services/pro_service.dart';
+import '../services/pdf_import.dart';
 import 'editor_screen.dart';
 import 'pro_sheet.dart';
 
@@ -32,10 +33,33 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() => _history = h);
   }
 
+  int _id = 0;
+
   Future<void> _openEditor(List<String> paths) async {
     if (paths.isEmpty || !mounted) return;
-    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditorScreen(initialPaths: paths)));
+    await _openItems([for (final p in paths) PageItem(id: _id++, path: p)]);
+  }
+
+  Future<void> _openItems(List<PageItem> items) async {
+    if (items.isEmpty || !mounted) return;
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => EditorScreen(initialItems: items)));
     _reload();
+  }
+
+  Future<void> _importPdf() async {
+    final s = S.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final paths = await PdfImport.pickPdfPaths();
+      if (paths.isEmpty) return;
+      final limit = ProService.instance.isPro.value ? 1 << 30 : ProService.freePageLimit;
+      final items = await PdfImport.importPages(paths, maxPages: limit, nextId: () => _id++);
+      await _openItems(items);
+    } on EncryptedPdfException {
+      messenger.showSnackBar(SnackBar(content: Text(s('pdfEncrypted'))));
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(s('pdfFailed'))));
+    }
   }
 
   Future<void> _pickGallery() async {
@@ -100,7 +124,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: FilledButton.tonal(
                   style: FilledButton.styleFrom(minimumSize: const Size(56, 52), padding: EdgeInsets.zero),
                   onPressed: _scan,
-                  child: const Icon(Icons.document_scanner_outlined),
+                  child: Tooltip(message: s('scan'), child: const Icon(Icons.document_scanner_outlined)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              SizedBox(
+                width: 56,
+                height: 52,
+                child: FilledButton.tonal(
+                  style: FilledButton.styleFrom(minimumSize: const Size(56, 52), padding: EdgeInsets.zero),
+                  onPressed: _importPdf,
+                  child: Tooltip(message: s('importPdf'), child: const Icon(Icons.picture_as_pdf_outlined)),
                 ),
               ),
             ]),

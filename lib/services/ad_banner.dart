@@ -3,7 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'pro_service.dart';
 
-/// Adaptive banner for the home screen only. Hidden for Pro users.
+/// Standard 320x50 banner for the home screen only. Hidden for Pro users.
 /// Uses Google's public TEST unit id; replace with a real one before release.
 class AdBanner extends StatefulWidget {
   const AdBanner({super.key});
@@ -12,18 +12,16 @@ class AdBanner extends StatefulWidget {
 }
 
 class _AdBannerState extends State<AdBanner> {
-  static const _testUnit = 'ca-app-pub-3940256099942544/9214589741';
+  static const _testUnit = 'ca-app-pub-3940256099942544/6300978111';
   BannerAd? _ad;
   bool _loaded = false;
-  int _width = 0;
 
-  Future<void> _load(int width) async {
-    final size = await AdSize.getLargeAnchoredAdaptiveBannerAdSize(width);
-    if (size == null || !mounted) return;
-    _ad?.dispose();
+  @override
+  void initState() {
+    super.initState();
     _ad = BannerAd(
       adUnitId: _testUnit,
-      size: size,
+      size: AdSize.banner, // 320x50
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (_) => mounted ? setState(() => _loaded = true) : null,
@@ -44,12 +42,6 @@ class _AdBannerState extends State<AdBanner> {
       valueListenable: ProService.instance.isPro,
       builder: (_, pro, _) {
         if (pro) return const SizedBox.shrink();
-        final w = MediaQuery.sizeOf(context).width.truncate();
-        if (w != _width) {
-          _width = w;
-          _loaded = false;
-          _load(w);
-        }
         if (!_loaded || _ad == null) return const SizedBox(height: 50);
         return SizedBox(
             width: _ad!.size.width.toDouble(),
