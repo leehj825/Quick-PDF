@@ -3,7 +3,7 @@ name: APK pre-release (debug + release)
 on:
   workflow_dispatch:
   push:
-    branches: [claude/new-session-9s5yp5]
+    branches: ['**']
     paths-ignore: ['**.md']
 
 permissions:
@@ -46,7 +46,7 @@ jobs:
           cp "$OUT/app-debug.apk" "dist/QuickPDF-${VERSION}-debug-${SHORT}.apk"
           cp "$OUT/app-release.apk" "dist/QuickPDF-${VERSION}-release-${SHORT}.apk"
           {
-            echo "Build #${GITHUB_RUN_NUMBER}, commit ${SHORT}."
+            echo "Build #${GITHUB_RUN_NUMBER}, branch ${GITHUB_REF_NAME}, commit ${SHORT}."
             echo "Test AdMob IDs; release APKs are signed with the debug key (not for Play upload)."
             echo
             echo "Release APK contains both arm64-v8a and armeabi-v7a (works on all ARM phones)."
