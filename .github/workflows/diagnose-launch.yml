@@ -51,5 +51,7 @@ jobs:
             grep -E -n "FATAL EXCEPTION|Fatal signal|UnsatisfiedLinkError|ClassNotFoundException|NoClassDefFoundError|NoSuchMethodError|NoSuchFieldError|AbstractMethodError|Process: app.quickpdf|Force finishing|ANR in|Exception in thread|F/libc|F DEBUG" logcat.txt | head -60 || true
             echo "=== context around first fatal ==="
             grep -n -m1 -E "FATAL EXCEPTION|Fatal signal" logcat.txt | cut -d: -f1 | while read n; do sed -n "$((n-3)),$((n+40))p" logcat.txt; done
+            echo "=== all Caused by lines near the app crash ==="
+            grep -n "Caused by" logcat.txt | grep -v SliceDataConverter | head -20
             echo "=== flutter / app tagged lines ==="
             grep -E "flutter|quick_pdf|quickpdf" logcat.txt | tail -40
