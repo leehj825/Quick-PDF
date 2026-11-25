@@ -37,7 +37,7 @@ jobs:
         run: |
           VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d+ -f1)
           SHORT=$(echo "$GITHUB_SHA" | cut -c1-7)
-          TAG="v${VERSION}-debug.${GITHUB_RUN_NUMBER}"
+          TAG="v${VERSION}-build.${GITHUB_RUN_NUMBER}"
           OUT=build/app/outputs/flutter-apk
           mkdir -p dist
           cp "$OUT/app-debug.apk" "dist/QuickPDF-${VERSION}-debug-${SHORT}.apk"
