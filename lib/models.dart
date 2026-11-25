@@ -22,9 +22,17 @@ enum PageSizeMode {
 }
 
 class PageItem {
-  PageItem({required this.id, required this.path});
-  final int id;
+  PageItem({required this.id, required this.path, this.pdfPath, this.pdfPageIndex = 0});
+
+  /// An imported PDF page: [path] is only a thumbnail; the source is [pdfPath] page [pdfPageIndex].
+  factory PageItem.pdfPage({required int id, required String thumbPath, required String pdfPath, required int index}) =>
+      PageItem(id: id, path: thumbPath, pdfPath: pdfPath, pdfPageIndex: index);
+
+  int id;
   String path;
+  final String? pdfPath;
+  final int pdfPageIndex;
+  bool get isPdfPage => pdfPath != null;
   int quarterTurns = 0; // 90° steps clockwise
   int brightness = 0; // -50..50
   int contrast = 0; // -50..50

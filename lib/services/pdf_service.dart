@@ -8,6 +8,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../models.dart';
 import 'filters.dart';
+import 'pdf_import.dart';
 
 class _PageJob {
   _PageJob(this.path, this.turns, this.brightness, this.contrast, this.filter,
@@ -93,9 +94,16 @@ class PdfService {
     for (var i = 0; i < pages.length; i++) {
       onProgress?.call(i + 1, pages.length);
       final p = pages[i];
-      final job = _PageJob(p.path, p.quarterTurns, p.brightness, p.contrast,
+      // Imported PDF pages are rasterized (at the chosen quality) so they can be mixed with photos.
+      final src = p.isPdfPage ? await PdfImport.rasterize(p, options.quality.maxEdge) : p.path;
+      final job = _PageJob(src, p.quarterTurns, p.brightness, p.contrast,
           options.filter, options.quality.maxEdge, options.quality.jpegQuality);
-      final r = await Isolate.run(() => _processPage(job));
+      final _PageResult r;
+      try {
+        r = await Isolate.run(() => _processPage(job));
+      } finally {
+        if (p.isPdfPage) File(src).deleteSync();
+      }
       final image = pw.MemoryImage(r.jpeg);
       final m = options.margin ? _margin : 0.0;
 

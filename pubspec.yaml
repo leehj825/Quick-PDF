@@ -49,6 +49,8 @@ dependencies:
   intl: ^0.20.3
   material_ui: ^1.11.1
   google_mlkit_text_recognition: ^1.0.3
+  pdfrx: ^3.1.0
+  file_picker: ^13.4.1
 
 dev_dependencies:
   flutter_test:
@@ -61,6 +63,7 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+  pdfrx_engine: ^0.9.6
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

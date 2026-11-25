@@ -81,7 +81,7 @@ class _PageEditorScreenState extends State<PageEditorScreen> {
               const SizedBox(height: 8),
               Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
                 _action(Icons.rotate_right, s('rotate'), () => setState(() => _turns = (_turns + 1) % 4)),
-                _action(Icons.crop, s('crop'), _crop),
+                if (!widget.item.isPdfPage) _action(Icons.crop, s('crop'), _crop),
                 _action(Icons.restart_alt, s('reset'), () => setState(() {
                       _path = _origPath;
                       _turns = 0;

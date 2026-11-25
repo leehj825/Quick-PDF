@@ -18,6 +18,7 @@ const _s = <String, Map<String, String>>{
     'proF1': '하단 배너 광고 영구 제거', 'proF2': '한 번에 20장 이상 대용량 변환', 'proF3': '텍스트 인식(OCR)으로 검색·복사 가능한 PDF (영어)',
     'buy': '구매하기', 'restore': '구매 복원', 'proActive': 'Pro 사용 중입니다. 감사합니다!', 'proUnavailable': '결제를 사용할 수 없어요.',
     'cropTitle': '자르기', 'noScan': '스캔을 완료하지 못했어요.',
+    'importPdf': 'PDF 가져오기', 'pdfMergeNote': 'PDF만 합칠 때는 원본 그대로 합쳐요. 화질·글자는 바뀌지 않아요.', 'pdfEncrypted': '비밀번호가 있는 PDF는 아직 지원하지 않아요.', 'pdfFailed': 'PDF를 열 수 없어요.', 'rotateShort': '회전',
     'ocr': '텍스트 인식 (검색 가능한 PDF)', 'ocrSub': '영어 · 글자 검색·복사 가능. 변환이 조금 느려져요', 'proOnly': 'Pro 기능이에요',
   },
   'en': {
@@ -35,6 +36,7 @@ const _s = <String, Map<String, String>>{
     'proF1': 'Remove banner ads forever', 'proF2': 'Convert more than 20 pages at once', 'proF3': 'Text recognition (OCR) for searchable, copyable PDFs (English)',
     'buy': 'Buy', 'restore': 'Restore purchase', 'proActive': 'Pro is active. Thank you!', 'proUnavailable': 'Purchases are unavailable.',
     'cropTitle': 'Crop', 'noScan': 'Scan was not completed.',
+    'importPdf': 'Import PDF', 'pdfMergeNote': 'Merging PDFs only: pages are combined as-is. Quality and text stay unchanged.', 'pdfEncrypted': 'Password-protected PDFs are not supported yet.', 'pdfFailed': 'Could not open this PDF.', 'rotateShort': 'Rotate',
     'ocr': 'Text recognition (searchable PDF)', 'ocrSub': 'English only · search & copy text. Conversion is a bit slower', 'proOnly': 'Pro feature',
   },
   'ja': {
@@ -52,6 +54,7 @@ const _s = <String, Map<String, String>>{
     'proF1': 'バナー広告を完全に削除', 'proF2': '20枚以上を一括変換', 'proF3': '文字認識(OCR)で検索・コピーできるPDF (英語)',
     'buy': '購入', 'restore': '購入を復元', 'proActive': 'Proをご利用中です。ありがとうございます!', 'proUnavailable': '課金を利用できません。',
     'cropTitle': 'トリミング', 'noScan': 'スキャンが完了しませんでした。',
+    'importPdf': 'PDFを取り込む', 'pdfMergeNote': 'PDFだけを結合する場合は元のまま結合します。画質や文字は変わりません。', 'pdfEncrypted': 'パスワード付きPDFにはまだ対応していません。', 'pdfFailed': 'このPDFを開けません。', 'rotateShort': '回転',
     'ocr': '文字認識 (検索可能なPDF)', 'ocrSub': '英語のみ・文字の検索とコピーが可能。変換が少し遅くなります', 'proOnly': 'Pro機能です',
   },
   'es': {
@@ -69,6 +72,7 @@ const _s = <String, Map<String, String>>{
     'proF1': 'Quitar los anuncios de banner', 'proF2': 'Convertir más de 20 páginas a la vez', 'proF3': 'Reconocimiento de texto (OCR) para PDF con búsqueda y copia (inglés)',
     'buy': 'Comprar', 'restore': 'Restaurar compra', 'proActive': 'Pro activo. ¡Gracias!', 'proUnavailable': 'Las compras no están disponibles.',
     'cropTitle': 'Recortar', 'noScan': 'El escaneo no se completó.',
+    'importPdf': 'Importar PDF', 'pdfMergeNote': 'Al unir solo PDF, las páginas se combinan tal cual. La calidad y el texto no cambian.', 'pdfEncrypted': 'Los PDF con contraseña aún no son compatibles.', 'pdfFailed': 'No se pudo abrir este PDF.', 'rotateShort': 'Girar',
     'ocr': 'Reconocimiento de texto (PDF con búsqueda)', 'ocrSub': 'Solo inglés · buscar y copiar texto. La conversión es algo más lenta', 'proOnly': 'Función Pro',
   },
 };
