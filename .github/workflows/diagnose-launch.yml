@@ -20,7 +20,9 @@ jobs:
       - run: flutter pub get
 
       - name: Allow x86_64 for the emulator build (not committed)
-        run: sed -i 's/listOf("arm64-v8a", "armeabi-v7a")/listOf("arm64-v8a", "armeabi-v7a", "x86_64")/' android/app/build.gradle.kts
+        run: |
+          sed -i 's/listOf("arm64-v8a", "armeabi-v7a")/listOf("arm64-v8a", "armeabi-v7a", "x86_64")/' android/app/build.gradle.kts
+          sed -i '/no-emulator-libs/d' android/app/build.gradle.kts
 
       - run: flutter build apk --release --target-platform android-x64
 

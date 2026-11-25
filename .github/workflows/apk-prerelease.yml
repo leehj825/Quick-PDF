@@ -51,8 +51,19 @@ jobs:
             echo
             (cd dist && ls -l | awk 'NR>1{printf "- %s: %.1f MB\n", $9, $5/1048576}')
           } > notes.md
-          gh release create "$TAG" dist/*.apk \
-            --target "$GITHUB_SHA" \
-            --prerelease \
-            --title "QuickPDF ${VERSION} (${SHORT})" \
-            --notes-file notes.md
+          # The releases API occasionally answers 403 even with contents: write; retry.
+          ok=
+          for i in 1 2 3 4; do
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              gh release upload "$TAG" dist/*.apk --clobber && ok=1 && break
+            else
+              gh release create "$TAG" dist/*.apk \
+                --target "$GITHUB_SHA" \
+                --prerelease \
+                --title "QuickPDF ${VERSION} (${SHORT})" \
+                --notes-file notes.md && ok=1 && break
+            fi
+            echo "attempt $i failed; retrying in $((i * 20))s"
+            sleep $((i * 20))
+          done
+          [ -n "$ok" ]

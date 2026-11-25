@@ -32,6 +32,12 @@ android {
         ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
 
+    packaging {
+        jniLibs {
+            excludes += setOf("lib/x86_64/**", "lib/x86/**") // no-emulator-libs (ARM-only APK)
+        }
+    }
+
     buildTypes {
         release {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
