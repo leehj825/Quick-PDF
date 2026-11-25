@@ -12,10 +12,10 @@ import '../services/filters.dart';
 import '../services/history_service.dart';
 import '../services/ocr_service.dart';
 import '../services/pdf_service.dart';
-import '../services/pro_service.dart';
+import '../services/reward_service.dart';
 import '../services/pdf_import.dart';
 import 'page_editor_screen.dart';
-import 'pro_sheet.dart';
+import 'reward_sheet.dart';
 import 'result_screen.dart';
 
 class EditorScreen extends StatefulWidget {
@@ -33,16 +33,39 @@ class _EditorScreenState extends State<EditorScreen> {
   DocFilter _filter = DocFilter.original;
   PageSizeMode _size = PageSizeMode.letter; // default: Letter
   bool _margin = false;
-  bool _ocr = false; // Pro: searchable PDF (English)
+  bool _ocr = false; // searchable PDF (English); needs a rewarded-ad credit
+  bool _premium = false; // this conversion uses a credit (OCR and/or more than the free page limit)
+  final List<PageItem> _pendingExtra = []; // pages beyond the free limit awaiting an ad
   ({int done, int total})? _progress;
 
-  int get _limit => ProService.instance.isPro.value ? 1 << 30 : ProService.freePageLimit;
+  int get _limit => _premium ? 1 << 30 : RewardService.freePageLimit;
+
+  /// Reserves a credit for this conversion (asks for a rewarded ad if there is none).
+  Future<bool> _ensurePremium(String reasonKey) async {
+    if (_premium) return true;
+    if (RewardService.instance.credits.value > 0) {
+      setState(() => _premium = true);
+      return true;
+    }
+    final ok = await showRewardSheet(context, reasonKey: reasonKey);
+    if (ok && mounted) setState(() => _premium = true);
+    return ok;
+  }
+
+  Future<void> _offerExtra() async {
+    if (_pendingExtra.isEmpty) return;
+    final extra = List<PageItem>.of(_pendingExtra);
+    _pendingExtra.clear();
+    if (await _ensurePremium('rewardReasonLimit') && mounted) _addItems(extra);
+  }
 
   @override
   void initState() {
     super.initState();
     _addItems(widget.initialItems, notify: false);
   }
+
+  // (extra pages beyond the free limit are offered via a rewarded ad after the first frame)
 
   @override
   void dispose() {
@@ -58,15 +81,8 @@ class _EditorScreenState extends State<EditorScreen> {
 
   void _addItems(List<PageItem> items, {bool notify = true}) {
     final room = _limit - _pages.length;
-    if (items.length > room) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(S.of(context)('limit', {'n': ProService.freePageLimit}))));
-        }
-      });
-    }
     final add = items.take(room < 0 ? 0 : room).toList();
+    final extra = items.skip(add.length).toList();
     for (final it in add) {
       it.id = _nextId++;
     }
@@ -74,6 +90,12 @@ class _EditorScreenState extends State<EditorScreen> {
       setState(() => _pages.addAll(add));
     } else {
       _pages.addAll(add);
+    }
+    if (extra.isNotEmpty) {
+      _pendingExtra.addAll(extra);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _offerExtra();
+      });
     }
   }
 
@@ -106,8 +128,7 @@ class _EditorScreenState extends State<EditorScreen> {
       try {
         final paths = await PdfImport.pickPdfPaths();
         if (paths.isEmpty) return;
-        final room = _limit - _pages.length;
-        final items = await PdfImport.importPages(paths, maxPages: room < 0 ? 0 : room, nextId: () => 0);
+        final items = await PdfImport.importPages(paths, maxPages: 60, nextId: () => 0);
         _addItems(items);
       } on EncryptedPdfException {
         messenger.showSnackBar(SnackBar(content: Text(s('pdfEncrypted'))));
@@ -130,7 +151,8 @@ class _EditorScreenState extends State<EditorScreen> {
     final s = S.of(context);
     final nav = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final useOcr = _ocr && ProService.instance.isPro.value;
+    final useOcr = _ocr && _premium;
+    final usesPremium = _premium && (useOcr || _pages.length > RewardService.freePageLimit);
     final ocr = useOcr ? OcrService() : null;
     try {
       setState(() => _progress = (done: 0, total: _pages.length));
@@ -156,6 +178,7 @@ class _EditorScreenState extends State<EditorScreen> {
       final entry = HistoryEntry(
           id: id, name: '$name.pdf', path: path, pages: _pages.length, size: size, createdAt: DateTime.now());
       await HistoryService.add(entry);
+      if (usesPremium) await RewardService.instance.consume(); // only when a premium feature was really used
       final count = await HistoryService.bumpSuccessCount();
       nav.pushReplacement(MaterialPageRoute(builder: (_) => ResultScreen(entry: entry, askReview: count == 3)));
     } on EncryptedPdfException {
@@ -359,27 +382,31 @@ class _EditorScreenState extends State<EditorScreen> {
           onSelected: busy ? null : (v) => setState(() => _margin = v),
         ),
       ]),
-      ValueListenableBuilder<bool>(
-        valueListenable: ProService.instance.isPro,
-        builder: (ctx, pro, _) => SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          dense: true,
-          title: Row(children: [
-            Flexible(child: Text(s('ocr'), style: const TextStyle(fontWeight: FontWeight.w600))),
-            if (!pro) const Padding(padding: EdgeInsets.only(left: 6), child: Icon(Icons.lock_outline, size: 16, color: Colors.amber)),
-          ]),
-          subtitle: Text(pro ? s('ocrSub') : s('proOnly'), style: const TextStyle(fontSize: 12)),
-          value: pro && _ocr,
-          onChanged: busy
-              ? null
-              : (v) {
-                  if (!pro) {
-                    showProSheet(ctx);
-                  } else {
-                    setState(() => _ocr = v);
-                  }
-                },
-        ),
+      ValueListenableBuilder<int>(
+        valueListenable: RewardService.instance.credits,
+        builder: (ctx, credits, _) {
+          final unlocked = _premium || credits > 0;
+          return SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            title: Row(children: [
+              Flexible(child: Text(s('ocr'), style: const TextStyle(fontWeight: FontWeight.w600))),
+              if (!unlocked)
+                const Padding(padding: EdgeInsets.only(left: 6), child: Icon(Icons.ondemand_video, size: 16, color: Color(0xFF2563EB))),
+            ]),
+            subtitle: Text(unlocked ? s('ocrSub') : s('adUnlock'), style: const TextStyle(fontSize: 12)),
+            value: _ocr,
+            onChanged: busy
+                ? null
+                : (v) async {
+                    if (!v) {
+                      setState(() => _ocr = false);
+                    } else if (await _ensurePremium('rewardReasonOcr')) {
+                      setState(() => _ocr = true);
+                    }
+                  },
+          );
+        },
       ),
       const SizedBox(height: 4),
       FilledButton(

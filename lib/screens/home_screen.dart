@@ -8,10 +8,9 @@ import '../l10n.dart';
 import '../models.dart';
 import '../services/ad_banner.dart';
 import '../services/history_service.dart';
-import '../services/pro_service.dart';
+import '../services/reward_service.dart';
 import '../services/pdf_import.dart';
 import 'editor_screen.dart';
-import 'pro_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -52,8 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final paths = await PdfImport.pickPdfPaths();
       if (paths.isEmpty) return;
-      final limit = ProService.instance.isPro.value ? 1 << 30 : ProService.freePageLimit;
-      final items = await PdfImport.importPages(paths, maxPages: limit, nextId: () => _id++);
+      // Import up to a sane cap; the editor asks for a rewarded ad if it exceeds the free limit.
+      final items = await PdfImport.importPages(paths, maxPages: 60, nextId: () => _id++);
       await _openItems(items);
     } on EncryptedPdfException {
       messenger.showSnackBar(SnackBar(content: Text(s('pdfEncrypted'))));
@@ -73,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
       options: DocumentScannerOptions(
         documentFormats: {DocumentFormat.jpeg},
         mode: ScannerMode.full,
-        pageLimit: ProService.freePageLimit,
+        pageLimit: RewardService.freePageLimit,
         isGalleryImport: false,
       ),
     );
@@ -93,16 +92,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(s('title'), style: const TextStyle(fontWeight: FontWeight.bold)),
-        actions: [
-          ValueListenableBuilder<bool>(
-            valueListenable: ProService.instance.isPro,
-            builder: (_, pro, _) => IconButton(
-              tooltip: s('pro'),
-              icon: Icon(Icons.workspace_premium, color: pro ? Colors.amber : Colors.amber.shade200),
-              onPressed: () => showProSheet(context),
-            ),
-          ),
-        ],
       ),
       body: _history.isEmpty ? _empty(s) : _list(s),
       bottomNavigationBar: SafeArea(

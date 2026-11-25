@@ -1,9 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-import 'pro_service.dart';
 
-/// Standard 320x50 banner for the home screen only. Hidden for Pro users.
+/// Standard 320x50 banner for the home screen only.
 /// Uses Google's public TEST unit id; replace with a real one before release.
 class AdBanner extends StatefulWidget {
   const AdBanner({super.key});
@@ -38,16 +37,10 @@ class _AdBannerState extends State<AdBanner> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: ProService.instance.isPro,
-      builder: (_, pro, _) {
-        if (pro) return const SizedBox.shrink();
-        if (!_loaded || _ad == null) return const SizedBox(height: 50);
-        return SizedBox(
-            width: _ad!.size.width.toDouble(),
-            height: _ad!.size.height.toDouble(),
-            child: AdWidget(ad: _ad!));
-      },
-    );
+    if (!_loaded || _ad == null) return const SizedBox(height: 50);
+    return SizedBox(
+        width: _ad!.size.width.toDouble(),
+        height: _ad!.size.height.toDouble(),
+        child: AdWidget(ad: _ad!));
   }
 }
