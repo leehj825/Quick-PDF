@@ -10,9 +10,11 @@ import '../l10n.dart';
 import '../models.dart';
 import '../services/filters.dart';
 import '../services/history_service.dart';
+import '../services/ocr_service.dart';
 import '../services/pdf_service.dart';
 import '../services/pro_service.dart';
 import 'page_editor_screen.dart';
+import 'pro_sheet.dart';
 import 'result_screen.dart';
 
 class EditorScreen extends StatefulWidget {
@@ -30,6 +32,7 @@ class _EditorScreenState extends State<EditorScreen> {
   DocFilter _filter = DocFilter.original;
   PageSizeMode _size = PageSizeMode.letter; // default: Letter
   bool _margin = false;
+  bool _ocr = false; // Pro: searchable PDF (English)
   ({int done, int total})? _progress;
 
   int get _limit => ProService.instance.isPro.value ? 1 << 30 : ProService.freePageLimit;
@@ -101,6 +104,8 @@ class _EditorScreenState extends State<EditorScreen> {
     final s = S.of(context);
     final nav = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
+    final useOcr = _ocr && ProService.instance.isPro.value;
+    final ocr = useOcr ? OcrService() : null;
     try {
       setState(() => _progress = (done: 0, total: _pages.length));
       final dir = await HistoryService.pdfDir();
@@ -109,8 +114,9 @@ class _EditorScreenState extends State<EditorScreen> {
       final path = '${dir.path}/$id.pdf';
       final size = await PdfService.build(
         pages: _pages,
-        options: PdfOptions(quality: _quality, filter: _filter, pageSize: _size, margin: _margin),
+        options: PdfOptions(quality: _quality, filter: _filter, pageSize: _size, margin: _margin, ocr: useOcr),
         outPath: path,
+        recognize: ocr?.recognize,
         onProgress: (d, t) => mounted ? setState(() => _progress = (done: d, total: t)) : null,
       );
       final entry = HistoryEntry(
@@ -121,6 +127,8 @@ class _EditorScreenState extends State<EditorScreen> {
     } catch (_) {
       messenger.showSnackBar(SnackBar(content: Text(s('error'))));
       if (mounted) setState(() => _progress = null);
+    } finally {
+      await ocr?.close();
     }
   }
 
@@ -274,7 +282,29 @@ class _EditorScreenState extends State<EditorScreen> {
           onSelected: busy ? null : (v) => setState(() => _margin = v),
         ),
       ]),
-      const SizedBox(height: 12),
+      ValueListenableBuilder<bool>(
+        valueListenable: ProService.instance.isPro,
+        builder: (ctx, pro, _) => SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          title: Row(children: [
+            Flexible(child: Text(s('ocr'), style: const TextStyle(fontWeight: FontWeight.w600))),
+            if (!pro) const Padding(padding: EdgeInsets.only(left: 6), child: Icon(Icons.lock_outline, size: 16, color: Colors.amber)),
+          ]),
+          subtitle: Text(pro ? s('ocrSub') : s('proOnly'), style: const TextStyle(fontSize: 12)),
+          value: pro && _ocr,
+          onChanged: busy
+              ? null
+              : (v) {
+                  if (!pro) {
+                    showProSheet(ctx);
+                  } else {
+                    setState(() => _ocr = v);
+                  }
+                },
+        ),
+      ),
+      const SizedBox(height: 4),
       FilledButton(
         onPressed: busy || _pages.isEmpty ? null : _make,
         child: Text(busy ? s('progress', {'a': _progress!.done, 'b': _progress!.total}) : s('make')),

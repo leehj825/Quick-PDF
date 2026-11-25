@@ -41,6 +41,7 @@ class _ProSheet extends StatelessWidget {
             const SizedBox(height: 12),
             row('proF1'),
             row('proF2'),
+            row('proF3'),
             const SizedBox(height: 16),
             if (pro)
               Text(s('proActive'), style: const TextStyle(fontWeight: FontWeight.w600))
