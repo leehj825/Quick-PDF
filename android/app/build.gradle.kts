@@ -27,6 +27,9 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // ARM only (no emulator x86): third-party AARs (ML Kit) ship x86_64 libs that
+        // --target-platform does not strip.
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a") }
     }
 
     buildTypes {
