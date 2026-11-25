@@ -79,11 +79,14 @@ void main() {
         const OcrLine('한글 only café', 120, 900, 700, 80), // non-Latin-1 chars must not break
       ],
     );
-    final r = await Process.run('pdftotext', ['-bbox', out, '-']);
-    if (r.exitCode != 0) {
-      markTestSkipped('pdftotext unavailable');
+    ProcessResult r;
+    try {
+      r = await Process.run('pdftotext', ['-bbox', out, '-']);
+    } on ProcessException {
+      markTestSkipped('pdftotext (poppler) not installed');
       return;
     }
+    expect(r.exitCode, 0);
     final text = r.stdout as String;
     expect(text, contains('>Hello<'));
     expect(text, contains('>World<'));
