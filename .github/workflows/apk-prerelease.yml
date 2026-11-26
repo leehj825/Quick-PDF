@@ -1,10 +1,17 @@
-name: APK pre-release (debug + release)
+name: APK pre-release (release)
 
 on:
   workflow_dispatch:
   push:
     branches: ['**']
-    paths-ignore: ['**.md']
+    paths-ignore:
+      - '**.md'
+      - '.github/workflows/diagnose-launch.yml'
+      - '.github/workflows/store-screenshots.yml'
+      - 'integration_test/**'
+      - 'test_driver/**'
+      - 'store/**'
+      - 'tool/store/**'
 
 permissions:
   contents: write
@@ -31,8 +38,40 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
-      - run: flutter build apk --debug --target-platform android-arm,android-arm64
-      - run: flutter build apk --release --target-platform android-arm,android-arm64
+      - name: Restore the release keystore from secrets
+        id: signing
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::warning::KEYSTORE_B64 is not available; the release will be signed with the debug key."
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload-keystore.jks"
+          echo "signed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build release APK and AAB
+        env:
+          # Read by android/app/build.gradle.kts. Only this step sees the signing secrets.
+          KEYSTORE_PATH: ${{ runner.temp }}/upload-keystore.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          # --build-number gives every CI build an increasing versionCode (Play requires that).
+          flutter build apk --release --target-platform android-arm,android-arm64 --build-number="$GITHUB_RUN_NUMBER"
+          flutter build appbundle --release --target-platform android-arm,android-arm64 --build-number="$GITHUB_RUN_NUMBER"
+
+      - name: Verify the APK signature
+        run: |
+          APKSIGNER="$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner"
+          "$APKSIGNER" verify --print-certs -v build/app/outputs/flutter-apk/app-release.apk > sign.txt || { cat sign.txt; exit 1; }
+          grep -E "Verifies|certificate DN|SHA-256 digest" sign.txt
+          if [ "${{ steps.signing.outputs.signed }}" = "true" ] && grep -q "Android Debug" sign.txt; then
+            echo "::error::The keystore secrets were restored but the APK is still signed with the debug key."
+            exit 1
+          fi
 
       - name: Publish pre-release
         env:
@@ -43,18 +82,32 @@ jobs:
           TAG="v${VERSION}-build.${GITHUB_RUN_NUMBER}"
           OUT=build/app/outputs/flutter-apk
           mkdir -p dist
-          cp "$OUT/app-debug.apk" "dist/QuickPDF-${VERSION}-debug-${SHORT}.apk"
           cp "$OUT/app-release.apk" "dist/QuickPDF-${VERSION}-release-${SHORT}.apk"
+          cp build/app/outputs/bundle/release/app-release.aab "dist/QuickPDF-${VERSION}-release-${SHORT}.aab"
+          CERT=$(grep -m1 "SHA-256 digest" sign.txt | awk '{print $NF}')
+          if grep -q "Android Debug" sign.txt; then SIGN="debug key (not for Play upload)"; else SIGN="release key, SHA-256 ${CERT}"; fi
           {
             echo "Build #${GITHUB_RUN_NUMBER}, branch ${GITHUB_REF_NAME}, commit ${SHORT}."
-            echo "Test AdMob IDs; release APKs are signed with the debug key (not for Play upload)."
+            echo "Real AdMob ids (release build). Signed with: ${SIGN}."
+            echo "The .aab is the file to upload to Google Play; the .apk is for installing on a phone."
             echo
             echo "Release APK contains both arm64-v8a and armeabi-v7a (works on all ARM phones)."
             echo
             (cd dist && ls -l | awk 'NR>1{printf "- %s: %.1f MB\n", $9, $5/1048576}')
           } > notes.md
-          gh release create "$TAG" dist/*.apk \
-            --target "$GITHUB_SHA" \
-            --prerelease \
-            --title "QuickPDF ${VERSION} (${SHORT})" \
-            --notes-file notes.md
+          # The releases API occasionally answers 403 even with contents: write; retry.
+          ok=
+          for i in 1 2 3 4; do
+            if gh release view "$TAG" >/dev/null 2>&1; then
+              gh release upload "$TAG" dist/*.apk dist/*.aab --clobber && ok=1 && break
+            else
+              gh release create "$TAG" dist/*.apk dist/*.aab \
+                --target "$GITHUB_SHA" \
+                --prerelease \
+                --title "QuickPDF ${VERSION} (${SHORT})" \
+                --notes-file notes.md && ok=1 && break
+            fi
+            echo "attempt $i failed; retrying in $((i * 20))s"
+            sleep $((i * 20))
+          done
+          [ -n "$ok" ]
