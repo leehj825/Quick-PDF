@@ -56,7 +56,7 @@ jobs:
           api-level: 34
           arch: x86_64
           target: google_apis
-          profile: pixel_6
+          profile: pixel_3   # 1080x2160 (2:1) - the Play Store rejects screenshots taller than 2:1
           ram-size: 4096M
           disable-animations: true
           script: bash tool/store/run_drive.sh
@@ -75,7 +75,7 @@ jobs:
             else
               gh release create "$TAG" build/store/device/*.png --target "$GITHUB_SHA" --prerelease \
                 --title "Store screenshots (real app, emulator) #${GITHUB_RUN_NUMBER}" \
-                --notes "Real screenshots of the app running on an Android 14 emulator (Pixel 6). Not an app build." && ok=1 && break
+                --notes "Real screenshots of the app running on an Android 14 emulator (Pixel 3, 1080x2160). Not an app build." && ok=1 && break
             fi
             echo "attempt $i failed; retrying in $((i * 20))s"; sleep $((i * 20))
           done
