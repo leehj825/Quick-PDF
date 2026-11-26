@@ -11,6 +11,7 @@ on:
       - '.github/workflows/store-screenshots.yml'
       - 'tool/store/embed_samples.py'
       - 'tool/store/make_samples.py'
+      - 'tool/store/run_drive.sh'
 
 permissions:
   contents: write
@@ -52,7 +53,7 @@ jobs:
           profile: pixel_6
           ram-size: 4096M
           disable-animations: true
-          script: flutter drive --driver=test_driver/integration_test.dart --target=integration_test/store_screenshots_test.dart -d emulator-5554
+          script: bash tool/store/run_drive.sh
 
       - name: Upload screenshots to a pre-release
         if: always()

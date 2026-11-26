@@ -64,6 +64,8 @@ class _FakeFilePicker extends FilePickerPlatform {
       [for (final p in next) _LocalFile(p)];
 }
 
+void step(String message) => print('STEP: $message'); // visible in logcat (tag: flutter)
+
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -91,6 +93,7 @@ void main() {
     }
 
     Future<void> waitFor(Finder finder, {Duration timeout = const Duration(seconds: 120)}) async {
+      step('waiting for $finder');
       final end = DateTime.now().add(timeout);
       while (finder.evaluate().isEmpty) {
         if (DateTime.now().isAfter(end)) throw TestFailure('timed out waiting for $finder');
@@ -98,6 +101,7 @@ void main() {
         await t.pump();
       }
       await wait(const Duration(milliseconds: 400));
+      step('found $finder');
     }
 
     Future<void> tap(Finder finder) async {
@@ -109,7 +113,9 @@ void main() {
 
     Future<void> shot(String name, {Duration settle = const Duration(milliseconds: 1500)}) async {
       await wait(settle);
+      step('screenshot $name');
       await binding.takeScreenshot(name);
+      step('screenshot $name saved');
     }
 
     /// Home -> Gallery -> (fake picker) -> Editor -> [optional name] -> Create PDF -> Done -> Home
@@ -125,14 +131,20 @@ void main() {
     }
 
     // --- start the real app
+    step('convert surface');
     await binding.convertFlutterSurfaceToImage();
+    step('start app.main()');
     await app.main();
+    step('app.main() returned');
     await wait(const Duration(seconds: 6));
+    step('first frames done');
 
+    step('make earlier PDFs');
     // 1) earlier work, so the Home screen has a real history
     await makePdf([f['invoice_photo']!, f['letter_photo']!], name: 'Invoice_Sample');
     await makePdf([f['receipt_photo']!, f['idcard_photo']!, f['form_photo']!], name: 'Contract_Scan');
 
+    step('main flow');
     // 2) the main flow, with screenshots
     final six = [f['receipt_photo']!, f['invoice_photo']!, f['letter_photo']!, f['form_photo']!, f['idcard_photo']!, f['notes_photo']!];
     imagePicker.next = six;
@@ -157,6 +169,7 @@ void main() {
     // 3) Home with the three PDFs that were really created above
     await shot('01-home', settle: const Duration(seconds: 4));
 
+    step('merge');
     // 4) merge two of those PDFs (PDF + PDF only -> lossless merge screen)
     final history = await HistoryService.load();
     expect(history.length, greaterThanOrEqualTo(3));
