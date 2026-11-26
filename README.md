@@ -24,7 +24,13 @@ flutter build appbundle
 
 ## 출시 전 교체/설정할 것
 - **광고 ID**: 릴리스 빌드는 실제 AdMob ID를, 디버그/테스트 빌드는 Google 테스트 ID를 씁니다(`lib/services/ad_ids.dart`, `android/app/build.gradle.kts`의 `admobAppId`). 개발 중 실제 광고를 로드·클릭하면 AdMob 계정이 제한될 수 있어 분리했습니다. 새 광고 단위는 노출까지 최대 1시간 걸릴 수 있고, 처음에는 `No fill`이 정상입니다.
-- `applicationId`(`app.quickpdf.quick_pdf`), 릴리스 서명 키
+- `applicationId`(`app.quickpdf.quick_pdf`)는 Play에 올린 뒤에는 바꿀 수 없습니다.
+
+## 릴리스 서명 (CI)
+GitHub Secrets `KEYSTORE_B64`(키스토어를 base64로 인코딩), `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`를 쓰면
+CI가 키스토어를 러너 임시 폴더에 복원해 APK와 **AAB(Play 업로드용)**를 서명하고, 서명이 디버그 키가 아닌지 검증한 뒤 프리릴리즈에 올립니다.
+시크릿이 없으면(포크 등) 디버그 키로 서명됩니다. 로컬에서 서명하려면 환경변수 또는 `android/key.properties`(git 제외)를 쓰세요.
+> 디버그 키로 설치한 이전 APK 위에는 덮어 설치되지 않습니다(서명이 달라서). 한 번 삭제한 뒤 설치하세요.
 
 ## 미구현 (TODO)
 PDF 비밀번호 잠금(`pdf` 패키지는 암호화 구현체 미포함), 설정 화면, 저사양 기기 20~30장 스트레스 테스트
