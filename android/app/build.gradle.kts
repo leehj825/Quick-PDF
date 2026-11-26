@@ -39,7 +39,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Never use the real ad ids while developing/testing: clicking your own ads can get the
+            // AdMob account limited for invalid traffic.
+            manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713" // Google test app id
+        }
         release {
+            manifestPlaceholders["admobAppId"] = "ca-app-pub-4400173019354346~2281968732" // Quick PDF
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.

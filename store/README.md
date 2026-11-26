@@ -26,5 +26,5 @@ python3 tool/store/compose.py                         # store/graphics, store/sc
 - **데이터 보안 양식**: 광고 ID(AdMob) 수집·공유 항목 신고.
 - **광고 포함 앱: 예**로 선택.
 - **콘텐츠 등급 설문**, 앱 카테고리(도구 또는 생산성), 연락처 이메일.
-- **광고 ID 교체**: 지금은 Google 테스트 ID입니다. `AndroidManifest.xml`의 앱 ID, `ad_banner.dart`, `reward_service.dart`의 광고 단위 ID를 실제 값으로 바꿔야 합니다(테스트 ID로 출시하면 안 됩니다).
+- **광고 ID**: 실제 AdMob ID가 릴리스 빌드에 적용돼 있습니다(디버그·테스트는 테스트 ID). 본인 폰에서 릴리스 APK를 쓸 때는 AdMob 콘솔 → 설정 → 테스트 기기에 그 폰을 등록해 두세요. 실제 광고를 직접 누르면 계정이 제한될 수 있습니다.
 - **릴리스 서명 키 + AAB**: 지금 CI의 APK는 디버그 키로 서명돼 Play에 올릴 수 없습니다.

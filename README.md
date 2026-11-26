@@ -23,7 +23,7 @@ flutter build appbundle
 - **i18n:** 한국어 / 영어 / 일본어 / 스페인어, 다크 모드
 
 ## 출시 전 교체/설정할 것
-- `android/app/src/main/AndroidManifest.xml`의 AdMob **테스트 앱 ID**, `lib/services/ad_banner.dart`(배너)·`lib/services/reward_service.dart`(보상형)의 **테스트 광고 단위 ID**
+- **광고 ID**: 릴리스 빌드는 실제 AdMob ID를, 디버그/테스트 빌드는 Google 테스트 ID를 씁니다(`lib/services/ad_ids.dart`, `android/app/build.gradle.kts`의 `admobAppId`). 개발 중 실제 광고를 로드·클릭하면 AdMob 계정이 제한될 수 있어 분리했습니다. 새 광고 단위는 노출까지 최대 1시간 걸릴 수 있고, 처음에는 `No fill`이 정상입니다.
 - `applicationId`(`app.quickpdf.quick_pdf`), 릴리스 서명 키
 
 ## 미구현 (TODO)

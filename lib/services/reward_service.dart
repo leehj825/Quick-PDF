@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'ad_ids.dart';
+
 /// Rewarded-ad "one use" credits. Watching one ad grants one credit; a credit is consumed
 /// only when a conversion actually used a premium feature (text recognition or >20 pages).
 class RewardService {
@@ -12,9 +14,6 @@ class RewardService {
 
   static const freePageLimit = 20;
   static const _key = 'quickpdf.rewardCredits';
-
-  /// Google's public TEST rewarded unit id. Replace with a real one before release.
-  static const _unitId = 'ca-app-pub-3940256099942544/5224354917';
 
   /// Stock is capped at 1 so credits cannot be hoarded ("1 ad = 1 use").
   final ValueNotifier<int> credits = ValueNotifier(0);
@@ -51,7 +50,7 @@ class RewardService {
     final done = Completer<void>();
     try {
       RewardedAd.load(
-        adUnitId: _unitId,
+        adUnitId: AdIds.rewarded,
         request: const AdRequest(),
         rewardedAdLoadCallback: RewardedAdLoadCallback(
           onAdLoaded: (ad) {

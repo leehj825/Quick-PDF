@@ -1,6 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import 'ad_ids.dart';
+
 
 /// Standard 320x50 banner for the home screen only.
 /// Uses Google's public TEST unit id; replace with a real one before release.
@@ -11,7 +13,6 @@ class AdBanner extends StatefulWidget {
 }
 
 class _AdBannerState extends State<AdBanner> {
-  static const _testUnit = 'ca-app-pub-3940256099942544/6300978111';
   BannerAd? _ad;
   bool _loaded = false;
 
@@ -19,7 +20,7 @@ class _AdBannerState extends State<AdBanner> {
   void initState() {
     super.initState();
     _ad = BannerAd(
-      adUnitId: _testUnit,
+      adUnitId: AdIds.banner,
       size: AdSize.banner, // 320x50
       request: const AdRequest(),
       listener: BannerAdListener(
