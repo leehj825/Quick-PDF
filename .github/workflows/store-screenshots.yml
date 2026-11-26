@@ -36,6 +36,12 @@ jobs:
           python3 tool/store/make_samples.py build/store/samples
           python3 tool/store/embed_samples.py
 
+      - name: Allow x86_64 for the emulator build (not committed)
+        run: |
+          # The shipped APK is ARM-only; the emulator needs x86_64 libraries or the app dies at launch.
+          sed -i 's/listOf("arm64-v8a", "armeabi-v7a")/listOf("arm64-v8a", "armeabi-v7a", "x86_64")/' android/app/build.gradle.kts
+          sed -i '/no-emulator-libs/d' android/app/build.gradle.kts
+
       - run: flutter pub get
 
       - name: Enable KVM
