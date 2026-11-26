@@ -1,0 +1,41 @@
+A light, simple app that combines photos, camera scans and existing PDFs into a single PDF. No login, no watermark, and the conversion happens on your device.
+
+■ Great for
+• Submitting documents or ID photos as a PDF to an office, bank, school or employer
+• Bundling receipts, contracts and ID photos into one clean file
+• Shrinking a PDF to fit an email or website upload limit
+
+■ Features
+• Import photos: pick many at once from your gallery (no storage permission needed)
+• Camera scan: automatic edge detection and perspective correction
+• Import PDF: bring in pages from an existing PDF and edit them with your photos
+• Reorder: long-press a thumbnail and drag
+• Per-page adjustments: brightness, contrast, 90° rotate, crop, delete
+• Document filters: Original / Vivid / B&W (great for receipts and contracts)
+• Size control: High, Standard or Small, with an estimated file size
+• Page setup: Letter (default), A4 or original size, margin on/off, custom file name
+• Instant sharing: send through the share sheet to messengers, email or cloud storage
+• Recent PDFs list: open, share or delete
+
+■ Merging PDFs
+Pick only PDF files and the pages are copied exactly as they are. Text and quality do not change; only order, deletion and rotation are applied. If you mix PDF pages with photos, the PDF pages are converted to images at the quality you choose.
+
+■ Text recognition (searchable PDF)
+Adds an invisible text layer over each page so you can search and copy text in a PDF viewer. English only, and conversion can take a little longer.
+
+■ Free to use, and how ads work
+• Convert up to 20 pages at a time for free.
+• Text recognition and going over 20 pages are optional: watch a short ad to use them once.
+• There are no interstitial ads that interrupt your work. A banner ad appears at the bottom of the home screen.
+• There are no subscriptions or purchases.
+
+■ Privacy
+• Your photos and PDFs are processed on your device and are not uploaded to a server.
+• To show ads, Google AdMob may collect advertising identifiers and related ad data. See the privacy policy for details.
+• The internet is only needed to load ads; creating PDFs works offline.
+
+■ Good to know
+• Password-protected PDFs are not supported yet.
+• Available in English, 한국어, 日本語 and Español.
+
+Send feedback or questions to the developer contact listed on this page.

@@ -21,9 +21,11 @@ Future<void> main() async {
 
 class QuickPdfApp extends StatelessWidget {
   /// [locale] / [home] are only overridden by tests and the store-screenshot renderer.
-  const QuickPdfApp({super.key, this.locale, this.home});
+  const QuickPdfApp({super.key, this.locale, this.home, this.fontFamily, this.fontFamilyFallback});
   final Locale? locale;
   final Widget? home;
+  final String? fontFamily;
+  final List<String>? fontFamilyFallback;
 
   ThemeData _theme(Brightness b) {
     final dark = b == Brightness.dark;
@@ -34,6 +36,8 @@ class QuickPdfApp extends StatelessWidget {
     );
     return ThemeData(
       useMaterial3: true,
+      fontFamily: fontFamily,
+      fontFamilyFallback: fontFamilyFallback,
       colorScheme: scheme,
       scaffoldBackgroundColor: dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
       appBarTheme: const AppBarTheme(
@@ -52,7 +56,7 @@ class QuickPdfApp extends StatelessWidget {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(52),
-          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, fontFamily: fontFamily, fontFamilyFallback: fontFamilyFallback),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         ),
       ),

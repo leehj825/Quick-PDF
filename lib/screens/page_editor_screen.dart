@@ -47,7 +47,7 @@ class _PageEditorScreenState extends State<PageEditorScreen> {
   Widget build(BuildContext context) {
     final s = S.of(context);
     Widget slider(String label, int v, ValueChanged<int> on) => Row(children: [
-          SizedBox(width: 56, child: Text(label)),
+          SizedBox(width: 92, child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis)),
           Expanded(
             child: Slider(value: v.toDouble(), min: -50, max: 50, divisions: 100, label: '$v', onChanged: (x) => setState(() => on(x.round()))),
           ),

@@ -22,10 +22,10 @@ void main() {
     expect((await probe(tester, const Locale('ko', 'KR'))), ('ko', '갤러리에서 선택'));
     expect((await probe(tester, const Locale('ja', 'JP'))).$1, 'ja');
     expect((await probe(tester, const Locale('es', 'ES'))).$1, 'es');
-    expect((await probe(tester, const Locale('en', 'US'))), ('en', 'Choose from gallery'));
+    expect((await probe(tester, const Locale('en', 'US'))), ('en', 'Gallery'));
   });
 
   testWidgets('unsupported languages fall back to English', (tester) async {
-    expect((await probe(tester, const Locale('fr', 'FR'))), ('en', 'Choose from gallery'));
+    expect((await probe(tester, const Locale('fr', 'FR'))), ('en', 'Gallery'));
   });
 }

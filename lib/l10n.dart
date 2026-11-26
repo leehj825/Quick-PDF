@@ -19,7 +19,7 @@ const _s = <String, Map<String, String>>{
     'ocr': '텍스트 인식 (검색 가능한 PDF)', 'ocrSub': '영어 · 글자 검색·복사 가능. 변환이 조금 느려져요', },
   'en': {
     'title': 'Photos → PDF', 'emptyTitle': 'Pick photos or scan documents and bundle them into a PDF in 1 second.',
-    'emptySub': 'Everything is processed safely on your device.', 'gallery': 'Choose from gallery', 'scan': 'Scan',
+    'emptySub': 'Everything is processed safely on your device.', 'gallery': 'Gallery', 'scan': 'Scan',
     'recent': 'Recent PDFs', 'total': '{n} pages', 'add': 'Add', 'filename': 'File name', 'filter': 'Document filter',
     'fOriginal': 'Original', 'fVivid': 'Vivid', 'fMono': 'B&W', 'quality': 'Compression',
     'qHigh': 'High', 'qStd': 'Standard', 'qLow': 'Small', 'estimate': 'Estimated size', 'pageSize': 'Page size',
@@ -47,7 +47,7 @@ const _s = <String, Map<String, String>>{
     'ocr': '文字認識 (検索可能なPDF)', 'ocrSub': '英語のみ・文字の検索とコピーが可能。変換が少し遅くなります', },
   'es': {
     'title': 'Fotos → PDF', 'emptyTitle': 'Elige fotos o escanea documentos y únelos en un PDF en 1 segundo.',
-    'emptySub': 'Todo se procesa de forma segura en tu dispositivo.', 'gallery': 'Elegir de la galería', 'scan': 'Escanear',
+    'emptySub': 'Todo se procesa de forma segura en tu dispositivo.', 'gallery': 'Galería', 'scan': 'Escanear',
     'recent': 'PDF recientes', 'total': '{n} páginas', 'add': 'Añadir', 'filename': 'Nombre', 'filter': 'Filtro de documento',
     'fOriginal': 'Original', 'fVivid': 'Nítido', 'fMono': 'B/N', 'quality': 'Compresión',
     'qHigh': 'Alta', 'qStd': 'Estándar', 'qLow': 'Ligera', 'estimate': 'Tamaño estimado', 'pageSize': 'Tamaño de página',

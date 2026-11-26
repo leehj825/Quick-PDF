@@ -162,8 +162,10 @@ class _HomeScreenState extends State<HomeScreen> {
               minTileHeight: 64,
               leading: const Icon(Icons.picture_as_pdf, color: Color(0xFFE11D48)),
               title: Text(h.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+              isThreeLine: true,
+              // Two short lines instead of one long line that wrapped mid-word ("6페이/지").
               subtitle: Text(
-                  '${h.createdAt.toLocal().toString().substring(0, 10)} · ${s('pages', {'n': h.pages})} · ${HistoryService.formatSize(h.size)}'),
+                  '${h.createdAt.toLocal().toString().substring(0, 10)}\n${s('pages', {'n': h.pages})} · ${HistoryService.formatSize(h.size)}'),
               onTap: () => OpenFilex.open(h.path),
               trailing: Row(mainAxisSize: MainAxisSize.min, children: [
                 IconButton(

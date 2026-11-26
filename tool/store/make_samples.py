@@ -111,6 +111,6 @@ pages = {'invoice': invoice(), 'letter': letter(), 'receipt': receipt(), 'idcard
 for name, im in pages.items():
     im.save(f'{out}/{name}.jpg', quality=90)
 # dim photo versions (used for the per-page editor / filter shot)
-shaded(pages['receipt']).save(f'{out}/receipt_photo.jpg', quality=90)
-shaded(pages['invoice'], (0.98, 0.97, 0.9), 0.5).save(f'{out}/invoice_photo.jpg', quality=90)
+shaded(pages['receipt'], (1.0, 0.92, 0.72), 0.16, 1.0).save(f'{out}/receipt_photo.jpg', quality=90)
+shaded(pages['invoice'], (1.0, 0.93, 0.74), 0.16, 1.0).save(f'{out}/invoice_photo.jpg', quality=90)
 print('samples ->', out, sorted(os.listdir(out)))

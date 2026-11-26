@@ -1,0 +1,41 @@
+Una app ligera y sencilla que une fotos, escaneos con la cámara y PDF existentes en un único PDF. Sin inicio de sesión, sin marca de agua, y la conversión se hace en tu dispositivo.
+
+■ Ideal para
+• Entregar documentos o fotos de identificación en PDF a una oficina, banco, escuela o empresa
+• Reunir recibos, contratos y fotos de identificación en un solo archivo limpio
+• Reducir el tamaño de un PDF para cumplir el límite de un correo o de un sitio web
+
+■ Funciones
+• Importar fotos: elige varias a la vez desde la galería (sin permiso de almacenamiento)
+• Escáner con cámara: detección automática de bordes y corrección de perspectiva
+• Importar PDF: trae páginas de un PDF existente y edítalas junto con tus fotos
+• Reordenar: mantén pulsada una miniatura y arrastra
+• Ajustes por página: brillo, contraste, giro de 90°, recorte y eliminación
+• Filtros de documento: original / nítido / blanco y negro (ideal para recibos y contratos)
+• Control de tamaño: alta, estándar o ligera, con tamaño estimado
+• Formato de página: Carta (predeterminado), A4 o tamaño original, margen sí/no y nombre de archivo
+• Compartir al instante: envía desde la hoja de compartir a mensajería, correo o la nube
+• Lista de PDF recientes: abrir, compartir o eliminar
+
+■ Unir PDF
+Si eliges solo archivos PDF, las páginas se copian tal cual. El texto y la calidad no cambian; solo se aplican el orden, la eliminación y el giro. Si mezclas páginas PDF con fotos, las páginas PDF se convierten en imágenes con la calidad elegida.
+
+■ Reconocimiento de texto (PDF con búsqueda)
+Añade una capa de texto invisible sobre cada página para que puedas buscar y copiar texto en un visor de PDF. Solo en inglés; la conversión puede tardar un poco más.
+
+■ Uso gratuito y cómo funcionan los anuncios
+• Convierte hasta 20 páginas a la vez gratis.
+• El reconocimiento de texto y superar las 20 páginas son opcionales: mira un anuncio corto para usarlos una vez.
+• No hay anuncios a pantalla completa que interrumpan tu trabajo. Se muestra un banner en la parte inferior de la pantalla de inicio.
+• No hay suscripciones ni compras.
+
+■ Privacidad
+• Tus fotos y PDF se procesan en tu dispositivo y no se suben a ningún servidor.
+• Para mostrar anuncios, Google AdMob puede recopilar identificadores publicitarios y datos relacionados. Consulta la política de privacidad para más detalles.
+• Solo se necesita internet para cargar los anuncios; crear PDF funciona sin conexión.
+
+■ Conviene saber
+• Los PDF protegidos con contraseña aún no son compatibles.
+• Disponible en English, 한국어, 日本語 y Español.
+
+Envía tus comentarios o preguntas al contacto del desarrollador que aparece en esta página.
