@@ -4,7 +4,14 @@ on:
   workflow_dispatch:
   push:
     branches: ['**']
-    paths-ignore: ['**.md', '.github/workflows/diagnose-launch.yml']
+    paths-ignore:
+      - '**.md'
+      - '.github/workflows/diagnose-launch.yml'
+      - '.github/workflows/store-screenshots.yml'
+      - 'integration_test/**'
+      - 'test_driver/**'
+      - 'store/**'
+      - 'tool/store/**'
 
 permissions:
   contents: write

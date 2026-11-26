@@ -107,10 +107,23 @@ def shaded(im, tint=(1.0, 0.96, 0.82), dark=0.55, blur=1.2):
             op[x, y] = (int(r * tint[0] * f), int(g * tint[1] * f), int(b * tint[2] * f))
     return out.filter(ImageFilter.GaussianBlur(blur))
 
-pages = {'invoice': invoice(), 'letter': letter(), 'receipt': receipt(), 'idcard': idcard(), 'form': form()}
+def notes():
+    im, d = paper((253, 252, 246))
+    d.text((90, 90), 'MEETING NOTES', font=font(62, True), fill=(30, 41, 90))
+    d.text((90, 190), 'Project kickoff  ·  Sample Studio Ltd.', font=font(32), fill=(90, 98, 120))
+    for i in range(7):
+        y = 310 + i * 175
+        d.ellipse((92, y + 6, 120, y + 34), fill=(37, 99, 235))
+        lines(d, 150, y + 10, 2, random.choice((760, 880, 640)), gap=52)
+    return im
+
+pages = {'invoice': invoice(), 'letter': letter(), 'receipt': receipt(), 'idcard': idcard(), 'form': form(), 'notes': notes()}
 for name, im in pages.items():
     im.save(f'{out}/{name}.jpg', quality=90)
 # dim photo versions (used for the per-page editor / filter shot)
 shaded(pages['receipt'], (1.0, 0.92, 0.72), 0.16, 1.0).save(f'{out}/receipt_photo.jpg', quality=90)
 shaded(pages['invoice'], (1.0, 0.93, 0.74), 0.16, 1.0).save(f'{out}/invoice_photo.jpg', quality=90)
+# phone-photo look for every page (used by the real-device screenshot run)
+for name in ('letter', 'form', 'idcard', 'notes'):
+    shaded(pages[name], (1.0, 0.93, 0.76), 0.16, 1.0).save(f'{out}/{name}_photo.jpg', quality=90)
 print('samples ->', out, sorted(os.listdir(out)))
