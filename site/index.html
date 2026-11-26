@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QuickPDF – Photo to PDF maker (offline, no watermark)</title>
+<meta name="description" content="Turn photos, camera scans and PDFs into one PDF on your phone. No watermark, no login, files stay on your device.">
+<meta name="theme-color" content="#1e1b4b">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<style>
+:root{--bg:#f8fafc;--card:#fff;--text:#0f172a;--muted:#475569;--line:#e2e8f0;--primary:#2563eb;--deep:#1e1b4b;--accent:#e11d48}
+@media (prefers-color-scheme:dark){:root{--bg:#0f172a;--card:#1e293b;--text:#f1f5f9;--muted:#cbd5e1;--line:#334155;--primary:#60a5fa}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+a{color:var(--primary)}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+header.top{background:linear-gradient(135deg,var(--deep),#2563eb);color:#fff}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:64px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none;font-weight:700;font-size:18px}
+.brand img{width:32px;height:32px;border-radius:8px}
+nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+nav a{color:#e0e7ff;text-decoration:none;padding:8px 10px;border-radius:8px;font-size:15px}
+nav a:hover,nav a[aria-current=page]{background:rgba(255,255,255,.16);color:#fff}
+.lang{display:inline-flex;border:1px solid rgba(255,255,255,.45);border-radius:999px;overflow:hidden;margin-left:6px}
+.lang button{all:unset;cursor:pointer;color:#e0e7ff;padding:6px 12px;font-size:13px}
+.lang button[aria-pressed=true]{background:#fff;color:var(--deep);font-weight:700}
+.lang button:focus-visible,a:focus-visible,.btn:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}
+.hero{background:linear-gradient(135deg,var(--deep),#2563eb);color:#fff;padding:44px 0 56px}
+.hero .wrap{display:flex;gap:28px;align-items:center;flex-wrap:wrap}
+.hero img.icon{width:112px;height:112px;border-radius:26px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.hero h1{margin:0 0 8px;font-size:clamp(30px,5vw,44px);line-height:1.15}
+.hero p{margin:0 0 18px;font-size:clamp(16px,2.4vw,19px);color:#dbe4ff;max-width:560px}
+.btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-block;padding:13px 22px;border-radius:12px;font-weight:700;text-decoration:none;min-height:48px}
+.btn.primary{background:#fff;color:var(--deep)}
+.btn.ghost{border:2px solid rgba(255,255,255,.7);color:#fff}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.badge{border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);border-radius:999px;padding:5px 13px;font-size:14px}
+section{padding:44px 0}section h2{font-size:26px;margin:0 0 18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+.card h3{margin:0 0 6px;font-size:17px}.card p{margin:0;color:var(--muted);font-size:15px}
+.steps{counter-reset:s;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;padding:0;list-style:none;margin:0}
+.steps li{counter-increment:s;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 18px 64px;position:relative}
+.steps li:before{content:counter(s);position:absolute;left:18px;top:16px;width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center}
+.shots{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 14px;scroll-snap-type:x mandatory}
+.shots img{height:440px;width:auto;border-radius:18px;border:1px solid var(--line);flex:none;scroll-snap-align:start;background:var(--card)}
+details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:0 0 10px}
+summary{cursor:pointer;font-weight:600}details p{margin:8px 0 0;color:var(--muted)}
+footer{border-top:1px solid var(--line);padding:26px 0;color:var(--muted);font-size:14px}
+footer .wrap{display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap}
+html[data-lang=en] [lang=ko],html[data-lang=ko] [lang=en]{display:none!important}
+main.doc{padding:36px 0 56px}main.doc h1{font-size:clamp(28px,4.5vw,38px);margin:0 0 6px;line-height:1.2}
+main.doc h2{font-size:21px;margin:30px 0 8px}main.doc p,main.doc li{color:var(--text)}
+main.doc .meta{color:var(--muted);margin:0 0 22px}
+main.doc .note{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--primary);border-radius:10px;padding:14px 16px;margin:18px 0}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top}th{background:rgba(37,99,235,.1)}
+.tablewrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="index.html"><img src="assets/icon.png" alt="" width="32" height="32">QuickPDF</a>
+  <nav aria-label="Main">
+    <a href="index.html" aria-current="page"><span lang="en">Home</span><span lang="ko">홈</span></a>
+    <a href="index.html#support"><span lang="en">Support</span><span lang="ko">지원</span></a>
+    <a href="privacy.html"><span lang="en">Privacy Policy</span><span lang="ko">개인정보 처리방침</span></a>
+    <span class="lang" role="group" aria-label="Language"><button type="button" data-l="en" aria-pressed="true">EN</button><button type="button" data-l="ko" aria-pressed="false">한국어</button></span>
+  </nav>
+</div></header>
+
+<div class="hero"><div class="wrap">
+  <img class="icon" src="assets/icon.png" alt="QuickPDF app icon" width="112" height="112">
+  <div>
+    <h1>QuickPDF</h1>
+    <p lang="en">Turn photos, scans and PDFs into one PDF &mdash; right on your phone. No watermark, no login, and your files never leave your device.</p>
+    <p lang="ko">사진, 스캔, PDF를 하나의 PDF로 &mdash; 폰 안에서 바로. 워터마크도 로그인도 없고, 파일은 기기 밖으로 나가지 않아요.</p>
+    <div class="btns">
+      <a class="btn primary" href="https://play.google.com/store/apps/details?id=app.quickpdf.quick_pdf"><span lang="en">Get it on Google Play</span><span lang="ko">Google Play에서 받기</span></a>
+      <a class="btn ghost" href="privacy.html"><span lang="en">Privacy Policy</span><span lang="ko">개인정보 처리방침</span></a>
+    </div>
+    <div class="badges">
+      <span class="badge"><span lang="en">No watermark</span><span lang="ko">워터마크 없음</span></span>
+      <span class="badge"><span lang="en">No login</span><span lang="ko">로그인 없음</span></span>
+      <span class="badge"><span lang="en">Converts on-device</span><span lang="ko">기기 안에서 변환</span></span>
+      <span class="badge"><span lang="en">No subscription</span><span lang="ko">구독 없음</span></span>
+    </div>
+  </div>
+</div></div>
+
+<main>
+<section><div class="wrap">
+  <h2><span lang="en">How it works</span><span lang="ko">이렇게 사용해요</span></h2>
+  <ol class="steps">
+    <li><strong lang="en">Pick or scan</strong><strong lang="ko">고르거나 스캔</strong><br><span lang="en">Choose photos from your gallery, scan with the camera, or import PDFs.</span><span lang="ko">갤러리에서 사진을 고르거나, 카메라로 스캔하거나, PDF를 가져오세요.</span></li>
+    <li><strong lang="en">Arrange &amp; adjust</strong><strong lang="ko">정리하고 보정</strong><br><span lang="en">Drag to reorder, then fix brightness, contrast, rotation or crop.</span><span lang="ko">드래그로 순서를 바꾸고, 밝기·대비·회전·자르기를 조정하세요.</span></li>
+    <li><strong lang="en">Create &amp; share</strong><strong lang="ko">만들고 공유</strong><br><span lang="en">Pick a size, create the PDF and send it right away.</span><span lang="ko">용량을 고르고 PDF를 만든 뒤 바로 보내세요.</span></li>
+  </ol>
+</div></section>
+
+<section style="padding-top:0"><div class="wrap">
+  <h2><span lang="en">Screenshots</span><span lang="ko">스크린샷</span></h2>
+  <div class="shots" tabindex="0" aria-label="Screenshots">
+    <img src="assets/screenshots/02-editor.jpg" alt="Editor with six pages" loading="lazy" width="217" height="440">
+    <img src="assets/screenshots/03-filter.jpg" alt="Black-and-white document filter" loading="lazy" width="217" height="440">
+    <img src="assets/screenshots/04-adjust.jpg" alt="Brightness and contrast" loading="lazy" width="217" height="440">
+    <img src="assets/screenshots/05-merge.jpg" alt="Merging PDFs as they are" loading="lazy" width="217" height="440">
+    <img src="assets/screenshots/06-share.jpg" alt="Share right after creating" loading="lazy" width="217" height="440">
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2><span lang="en">Features</span><span lang="ko">주요 기능</span></h2>
+  <div class="grid">
+    <div class="card"><h3 lang="en">Photos, scans and PDFs</h3><h3 lang="ko">사진·스캔·PDF</h3><p lang="en">Pick many photos at once (no storage permission), scan documents with automatic edge detection, or import existing PDFs.</p><p lang="ko">사진을 한 번에 여러 장 고르고(저장소 권한 불필요), 테두리 자동 인식으로 서류를 스캔하거나, 기존 PDF를 가져오세요.</p></div>
+    <div class="card"><h3 lang="en">Document filters</h3><h3 lang="ko">문서 필터</h3><p lang="en">Original, Vivid or Black &amp; White &mdash; great for receipts and contracts. Fine-tune brightness and contrast per page.</p><p lang="ko">원본, 선명, 흑백 필터로 영수증·계약서를 또렷하게. 페이지마다 밝기와 대비도 조절할 수 있어요.</p></div>
+    <div class="card"><h3 lang="en">Size control</h3><h3 lang="ko">용량 선택</h3><p lang="en">High, Standard or Small with an estimated size, so your PDF fits email and website upload limits.</p><p lang="ko">고화질·표준·저용량 3단계와 예상 용량으로, 이메일이나 웹사이트의 용량 제한에 맞출 수 있어요.</p></div>
+    <div class="card"><h3 lang="en">Merge PDFs as they are</h3><h3 lang="ko">PDF 원본 그대로 합치기</h3><p lang="en">When you combine only PDFs, pages are copied as they are &mdash; text and quality stay unchanged.</p><p lang="ko">PDF만 합칠 때는 페이지를 그대로 복사해서 글자와 화질이 바뀌지 않아요.</p></div>
+    <div class="card"><h3 lang="en">Searchable PDF (English)</h3><h3 lang="ko">검색 가능한 PDF (영어)</h3><p lang="en">Optional text recognition adds an invisible text layer so you can search and copy text in a PDF viewer.</p><p lang="ko">선택 기능인 텍스트 인식으로 보이지 않는 글자 층을 더해, PDF 뷰어에서 글자를 검색하고 복사할 수 있어요.</p></div>
+    <div class="card"><h3 lang="en">Page setup</h3><h3 lang="ko">용지 설정</h3><p lang="en">Letter (default), A4 or original size, optional margins and your own file name.</p><p lang="ko">Letter(기본)·A4·원본 크기, 여백, 파일명 지정을 지원해요.</p></div>
+  </div>
+</div></section>
+
+<section><div class="wrap">
+  <h2><span lang="en">Free, with ads</span><span lang="ko">무료이며 광고가 있어요</span></h2>
+  <div class="card">
+    <p lang="en">QuickPDF is free. You can convert up to 20 pages at a time. Text recognition and going over 20 pages are optional: watch a short ad to use them once. A banner ad is shown on the home screen. There are no interstitial ads that interrupt your work, no subscriptions and no in-app purchases.</p>
+    <p lang="ko">QuickPDF는 무료예요. 한 번에 최대 20장까지 변환할 수 있어요. 텍스트 인식과 20장 초과 변환은 선택 사항으로, 짧은 광고를 보면 한 번 사용할 수 있어요. 홈 화면 하단에는 배너 광고가 표시돼요. 작업을 방해하는 전면 광고, 구독, 앱 내 결제는 없어요.</p>
+  </div>
+</div></section>
+
+<section id="support"><div class="wrap">
+  <h2><span lang="en">Support</span><span lang="ko">지원</span></h2>
+  <p lang="en">Questions, bug reports or ideas? Email us at <a href="mailto:YOUR_EMAIL@example.com">YOUR_EMAIL@example.com</a>. Please include your phone model and Android version.</p>
+  <p lang="ko">질문, 오류 제보, 아이디어가 있나요? <a href="mailto:YOUR_EMAIL@example.com">YOUR_EMAIL@example.com</a>으로 보내 주세요. 폰 모델과 안드로이드 버전을 함께 알려 주시면 도움이 돼요.</p>
+  <details><summary lang="en">Are my photos or PDFs uploaded anywhere?</summary><summary lang="ko">제 사진이나 PDF가 어딘가로 업로드되나요?</summary>
+    <p lang="en">No. Photos, scans and PDFs are processed on your device and are not sent to our servers (we do not run any). The internet is only used to load ads. See the <a href="privacy.html">Privacy Policy</a>.</p>
+    <p lang="ko">아니요. 사진, 스캔, PDF는 기기 안에서만 처리되고 저희 서버로 전송되지 않아요(서버 자체가 없어요). 인터넷은 광고를 불러올 때만 쓰여요. <a href="privacy.html">개인정보 처리방침</a>을 확인해 주세요.</p></details>
+  <details><summary lang="en">How do I make the PDF smaller?</summary><summary lang="ko">PDF 용량을 줄이려면 어떻게 하나요?</summary>
+    <p lang="en">In the editor, choose <em>Small</em> under Compression. The estimated size is shown next to it.</p>
+    <p lang="ko">편집 화면의 이미지 압축에서 <em>저용량</em>을 고르세요. 옆에 예상 용량이 표시돼요.</p></details>
+  <details><summary lang="en">What does "watch an ad" unlock?</summary><summary lang="ko">"광고 보기"로 무엇을 쓸 수 있나요?</summary>
+    <p lang="en">Text recognition (English) and converting more than 20 pages. One completed ad gives one use. It is only used up when a conversion that used these features finishes.</p>
+    <p lang="ko">텍스트 인식(영어)과 20장 초과 변환이에요. 광고를 끝까지 보면 한 번 쓸 수 있고, 이 기능을 쓴 변환이 끝났을 때만 소모돼요.</p></details>
+  <details><summary lang="en">Can I open password-protected PDFs?</summary><summary lang="ko">비밀번호가 걸린 PDF도 열 수 있나요?</summary>
+    <p lang="en">Not yet. Password-protected PDFs are not supported.</p>
+    <p lang="ko">아직 지원하지 않아요.</p></details>
+  <details><summary lang="en">Which languages and page sizes are supported?</summary><summary lang="ko">지원하는 언어와 용지 크기는요?</summary>
+    <p lang="en">The app is available in English, Korean, Japanese and Spanish. Page sizes: Letter (default), A4 and original size.</p>
+    <p lang="ko">영어, 한국어, 일본어, 스페인어를 지원하고, 용지는 Letter(기본)·A4·원본 크기를 선택할 수 있어요.</p></details>
+</div></section>
+</main>
+<footer><div class="wrap">
+  <div><span lang="en">&copy; <span class="y"></span> QuickPDF. All rights reserved.</span><span lang="ko">&copy; <span class="y"></span> QuickPDF. 모든 권리 보유.</span></div>
+  <div><a href="privacy.html"><span lang="en">Privacy Policy</span><span lang="ko">개인정보 처리방침</span></a> &middot; <a href="mailto:YOUR_EMAIL@example.com"><span lang="en">Contact</span><span lang="ko">문의</span></a></div>
+</div></footer>
+<script>
+(function(){
+  var KEY='quickpdf.lang', root=document.documentElement;
+  function apply(l){root.setAttribute('data-lang',l);root.setAttribute('lang',l);
+    document.querySelectorAll('.lang button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.l===l)});}
+  var q=new URLSearchParams(location.search).get('lang'), saved=null;
+  try{saved=localStorage.getItem(KEY)}catch(e){}
+  var l=(q==='ko'||q==='en')?q:(saved||((navigator.language||'en').toLowerCase().indexOf('ko')===0?'ko':'en'));
+  apply(l);
+  document.querySelectorAll('.lang button').forEach(function(b){b.addEventListener('click',function(){
+    apply(b.dataset.l);try{localStorage.setItem(KEY,b.dataset.l)}catch(e){}})});
+})();
+
+document.querySelectorAll('.y').forEach(function(e){e.textContent=new Date().getFullYear()});</script>
+</body>
+</html>
