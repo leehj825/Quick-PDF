@@ -3,6 +3,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:pdfrx/pdfrx.dart';
 
 import 'screens/home_screen.dart';
+import 'l10n.dart';
 import 'services/reward_service.dart';
 
 const kPrimary = Color(0xFF2563EB);
@@ -19,7 +20,10 @@ Future<void> main() async {
 }
 
 class QuickPdfApp extends StatelessWidget {
-  const QuickPdfApp({super.key});
+  /// [locale] / [home] are only overridden by tests and the store-screenshot renderer.
+  const QuickPdfApp({super.key, this.locale, this.home});
+  final Locale? locale;
+  final Widget? home;
 
   ThemeData _theme(Brightness b) {
     final dark = b == Brightness.dark;
@@ -62,7 +66,13 @@ class QuickPdfApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: _theme(Brightness.light),
       darkTheme: _theme(Brightness.dark),
-      home: const HomeScreen(),
+      locale: locale,
+      // Without these the app only "knows" en-US, so a Korean/Japanese/Spanish phone
+      // would resolve to English and never show the translated strings.
+      // English is first so unsupported languages (e.g. French) fall back to English.
+      supportedLocales: [for (final l in ['en', ...supportedLangs.where((l) => l != 'en')]) Locale(l)],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      home: home ?? const HomeScreen(),
     );
   }
 }
