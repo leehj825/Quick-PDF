@@ -64,6 +64,7 @@ class _FakeFilePicker extends FilePickerPlatform {
       [for (final p in next) _LocalFile(p)];
 }
 
+// ignore: avoid_print
 void step(String message) => print('STEP: $message'); // visible in logcat (tag: flutter)
 
 void main() {
